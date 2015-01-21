@@ -6,5 +6,5 @@ import (
 
 func TestSrc(t *testing.T) {
 
-	Src([]string{"/usr/share/**"}).Pipe(Dist("/public"))
+	<-Src([]string{"/usr/share/**"}).Pipe(Dist("/public"))
 }
