@@ -1,4 +1,4 @@
-package m
+package s
 
 import (
 	"fmt"
@@ -22,30 +22,33 @@ type taskerror struct {
 
 func (t *task) run() error {
 
-	done := make(chan taskerror)
-	cancel := make(chan struct{})
-
-	for name, task := range t.deps {
-		select {
-		case <-cancel:
-			break
-		default:
-			go func() {
-				done <- taskerror{name, task.run()}
-			}()
+	errs := make(chan taskerror)
+	cancel := make(chan struct{}, len(t.deps))
+	var wg sync.WaitGroup
+	go func(done chan taskerror) {
+		defer close(errs)
+		for name, task := range t.deps {
+			select {
+			case <-cancel:
+				break
+			default:
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					errs <- taskerror{name, task.run()}
+				}()
+			}
 		}
-	}
+		wg.Wait()
+	}(errs)
 
 	var failedjobs []string
 
-	for te := range done {
-		if te.err != nil {
-			if cancel != nil {
-				close(cancel)
-			}
-
-			log.Println(te.err)
-			failedjobs = append(failedjobs, te.name)
+	for err := range errs {
+		if err.err != nil {
+			cancel <- struct{}{}
+			log.Println(err.err)
+			failedjobs = append(failedjobs, err.name)
 		}
 	}
 
@@ -81,19 +84,29 @@ func (b *Build) Task(name string, deps []string, Task Task) {
 	b.tasks[name] = &t
 }
 
-func (b *Build) Run(tasks ...string) {
+type Waiter interface {
+	Wait()
+}
+
+func (b *Build) Run(tasks ...string) Waiter {
 
 	var wg sync.WaitGroup
 
 	for _, name := range tasks {
 		task, ok := b.tasks[name]
-
 		if !ok {
-			log.Fatalf("No Such Task: %s", task)
+			log.Printf("No Such Task: %s", task)
+			break
 		}
 		wg.Add(1)
-		task.run()
+		go func() {
+			defer wg.Done()
+			err := task.run()
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 
-	wg.Wait()
+	return &wg
 }
