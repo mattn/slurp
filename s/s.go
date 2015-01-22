@@ -13,7 +13,7 @@ type File struct {
 	Base    string
 	Path    string
 	Stat    os.FileInfo
-	Content io.ReadWriteCloser
+	Content io.Reader
 }
 
 type Pipe <-chan File
