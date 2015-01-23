@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -16,33 +15,6 @@ import (
 )
 
 //The Slupr runner.
-
-var runner = template.Must(template.New("main").Parse(`
-package main
-
-import (
-  "log"
-
-  "github.com/omeid/slurp/s"
-
-  client "{{ . }}/tmp"
-)
-
-func init() {
-  log.Println("Starting...")
-}
-
-func main() {
-  log.Println("Running....")
-
-  slurp := s.NewBuild()
-  
-  client.Slurp(slurp)
-
-  slurp.Run("default").Wait()
-
-  log.Println("End.")
-}`))
 
 var (
 	slurpfile = "slurp.go"
@@ -109,7 +81,6 @@ func generate() (string, error) {
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 
-	fmt.Printf("cwd %+v\n", cwd)
 	pkgs, err := parser.ParseDir(fset, cwd, nil, parser.ParseComments)
 	if err != nil {
 		return path, err
@@ -168,3 +139,30 @@ func writeFileSet(filepath string, fset *token.FileSet, node interface{}) error 
 
 	return format.Node(file, fset, node)
 }
+
+var runner = template.Must(template.New("main").Parse(`
+package main
+
+import (
+  "log"
+
+  "github.com/omeid/slurp/s"
+
+  client "{{ . }}/tmp"
+)
+
+func init() {
+  log.Println("Starting...")
+}
+
+func main() {
+  log.Println("Running....")
+
+  slurp := s.NewBuild()
+  
+  client.Slurp(slurp)
+
+  slurp.Run("default").Wait()
+
+  log.Println("End.")
+}`))
