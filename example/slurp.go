@@ -16,13 +16,11 @@ func init() {
 }
 */
 
-func Slurp() error {
+func Slurp(b *s.Build) {
 
 	//TODO: slurp needs to check if this function depends on the main package and import it.
 	//	_ = dep
 	fmt.Println("_s.Slurp")
-
-	b := s.NewBuild()
 
 	b.Task("say-hello", nil, func() error {
 		wait := time.Duration(rand.Intn(10)) * time.Second
@@ -39,12 +37,13 @@ func Slurp() error {
 					fmt.Printf("--> %s\n", f.Base)
 					out <- f
 				}
-			}).Pipe(s.Dist("/public")).Wait()
+			}).Pipe(s.Dest("/public")).Wait()
 
 		return nil
 	})
 
-	b.Run("say-hello", "testing", "say-hello", "say-hello", "say-hello").Wait()
-
-	return nil
+	b.Task("default", []string{"say-hello", "testing", "say-hello", "say-hello", "say-hello"}, func() error {
+		//Ideal for cleanup.
+		return nil
+	})
 }

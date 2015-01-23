@@ -9,6 +9,10 @@ import (
 )
 
 func TestSrc(t *testing.T) {
+	Src([]string{"../**", "../exmample/**/*.go"}).Wait()
+}
+
+func TestxSrci(t *testing.T) {
 
 	b := NewBuild()
 
@@ -31,5 +35,9 @@ func TestSrc(t *testing.T) {
 		return nil
 	})
 
-	b.Run("say-hello", "testing", "say-hello", "say-hello", "say-hello").Wait()
+	b.Task("default", []string{"say-hello", "testing", "say-hello", "say-hello", "say-hello"}, func() error {
+		return nil
+	})
+
+	b.Run("default").Wait()
 }

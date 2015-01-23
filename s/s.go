@@ -1,11 +1,8 @@
 package s
 
 import (
-	"fmt"
 	"io"
-	"log"
 	"os"
-	"path/filepath"
 )
 
 type File struct {
@@ -16,65 +13,43 @@ type File struct {
 	Content io.Reader
 }
 
-type Pipe <-chan File
+func (f *File) Close() error {
+	if closer, ok := f.Content.(io.Closer); ok {
+		return closer.Close()
+	}
+	return nil
+}
 
 type Job func(<-chan File, chan<- File)
 
+//func (j Job) run(p <-chan File) Pipe {
 func (p Pipe) Pipe(j Job) Pipe {
 	out := make(chan File)
 	go func() {
 		defer close(out)
 		j(p, out)
 	}()
+
 	return out
 }
 
+type Pipe <-chan File
+
+/*
+func (p Pipe) Pipe(j ...Job) Pipe {
+	switch len(j) {
+	case 0:
+		return p
+	case 1:
+		return j[0].run(p)
+	default:
+		return j[0].run(p).Pipe(j[1:]...)
+	}
+}
+*/
+
 func (p Pipe) Wait() {
-	for _ = range p {
-	}
-}
-
-func Src(globs []string) Pipe {
-
-	pipe := make(chan File)
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-		close(pipe)
-		return pipe
-	}
-
-	go func() {
-		defer close(pipe)
-		for _, glob := range globs {
-
-			files, err := filepath.Glob(glob)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			for _, file := range files {
-				//f, err := os.Open(file)
-				//if err != nil {
-				//	log.Println(err)
-				//		return
-				//	}
-				_ = cwd
-				pipe <- File{Base: file}
-			}
-
-		}
-	}()
-
-	return pipe
-}
-
-func Dist(dst string) Job {
-	return func(files <-chan File, out chan<- File) {
-		for f := range files {
-			fmt.Println(filepath.Join(dst, f.Base))
-		}
+	for f := range p {
+		f.Close()
 	}
 }

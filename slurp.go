@@ -19,19 +19,27 @@ var runner = template.Must(template.New("main").Parse(`
 package main
 
 import (
-  "fmt"
+  "log"
 
-  client "{{ . }}"
+  "github.com/omeid/slurp/s"
+
+  //client "{{ . }}"
 )
 
 func init() {
-  fmt.Println("Starting...")
+  log.Println("Starting...")
 }
 
 func main() {
-  fmt.Println("Running....")
-  client.Slurp()
-  fmt.Println("End.")
+  log.Println("Running....")
+
+  slurp := s.NewBuild()
+  
+  Slurp(slurp)
+
+  slurp.Run("default").Wait()
+
+  log.Println("End.")
 }`))
 
 var (
@@ -42,16 +50,25 @@ var (
 
 func main() {
 
+	log.Println("Start.")
 	if gopath == "" {
 		log.Fatal("$GOPATH must be set.")
 	}
 
-	err, path := generate()
+	err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Done.")
+}
+
+func run() error {
+	err, path := generate()
+	if err != nil {
+		return err
+	}
 	//Don't forget to clean up.
-	defer os.RemoveAll(path)
+	//defer os.RemoveAll(path)
 
 	cmd := exec.Command("go", "run",
 		filepath.Join(path, "main.go"),
@@ -65,10 +82,10 @@ func main() {
 	err = cmd.Run()
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	log.Println("Done.")
+	return nil
 }
 
 func generate() (error, string) {
