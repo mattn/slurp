@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -23,7 +25,7 @@ import (
 
   "github.com/omeid/slurp/s"
 
-  //client "{{ . }}"
+  client "{{ . }}/tmp"
 )
 
 func init() {
@@ -35,7 +37,7 @@ func main() {
 
   slurp := s.NewBuild()
   
-  Slurp(slurp)
+  client.Slurp(slurp)
 
   slurp.Run("default").Wait()
 
@@ -63,17 +65,14 @@ func main() {
 }
 
 func run() error {
-	err, path := generate()
+	path, err := generate()
 	if err != nil {
 		return err
 	}
 	//Don't forget to clean up.
 	//defer os.RemoveAll(path)
 
-	cmd := exec.Command("go", "run",
-		filepath.Join(path, "main.go"),
-		filepath.Join(path, "slurp.go"),
-	)
+	cmd := exec.Command("go", "run", filepath.Join(path, "main.go"))
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -88,48 +87,74 @@ func run() error {
 	return nil
 }
 
-func generate() (error, string) {
+func generate() (string, error) {
 
-	// Create the AST by parsing src.
-	fset := token.NewFileSet() // positions are relative to fset
-	f, err := parser.ParseFile(fset, slurpfile, nil, parser.ParseComments)
+	//Let's grab a temp folder.
+	path, err := ioutil.TempDir(filepath.Join(gopath, "src"), "slurp-run-")
 	if err != nil {
-		return err, ""
+		return "", err
 	}
 
-	f.Name.Name = "main"               //Change package name
-	f.Comments = []*ast.CommentGroup{} //Remove comments
-
-	tmp, err := ioutil.TempDir(os.TempDir(), "slurp-")
+	tmp := filepath.Join(path, "tmp")
+	err = os.Mkdir(tmp, 0700)
 	if err != nil {
-		return err, ""
+		return path, err
 	}
-
-	err = writeFileSet(filepath.Join(tmp, "slurp.go"), fset, f)
-	if err != nil {
-		return err, tmp
-	}
-
-	file, err := os.Create(filepath.Join(tmp, "main.go"))
 
 	cwd, err = os.Getwd()
 	if err != nil {
-		return err, tmp
+		return path, err
 	}
 
-	path, err := filepath.Rel(filepath.Join(gopath, "src"), cwd)
+	// Create the AST by parsing src.
+	fset := token.NewFileSet() // positions are relative to fset
+
+	fmt.Printf("cwd %+v\n", cwd)
+	pkgs, err := parser.ParseDir(fset, cwd, nil, parser.ParseComments)
 	if err != nil {
-		return err, tmp
+		return path, err
 	}
 
-	err = runner.Execute(file, path) //This should never fail, see MustParse.
+	if len(pkgs) > 1 {
+		return path, errors.New("Error: Multiple packages detected.")
+	}
+
+	for _, pkg := range pkgs {
+		//This loop always runs once. I don't know of any other way to get the pkg out of pkgs
+		// witout understanding the names.
+		for name, f := range pkg.Files {
+			f.Name.Name = "tmp" //Change package name
+			if filepath.Base(name) == slurpfile {
+				f.Comments = []*ast.CommentGroup{} //Remove comments
+			}
+
+			name, err = filepath.Rel(cwd, name)
+			if err != nil {
+				//Should never get error. But just incase.
+				return path, err
+			}
+			err = writeFileSet(filepath.Join(tmp, name), fset, f)
+			if err != nil {
+				return path, err
+			}
+		}
+	}
+
+	file, err := os.Create(filepath.Join(path, "main.go"))
+
+	tmp, err = filepath.Rel(filepath.Join(gopath, "src"), path)
+	if err != nil {
+		return path, err
+	}
+
+	err = runner.Execute(file, tmp) //This should never fail, see MustParse.
 	err = file.Close()
 
 	if err != nil {
-		return err, tmp
+		return path, err
 	}
 
-	return nil, tmp
+	return path, nil
 
 }
 
