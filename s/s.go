@@ -1,29 +1,15 @@
 package s
 
-import (
-	"io"
-	"os"
-)
+import "github.com/omeid/slurp/s/log"
 
-type File struct {
-	Cwd     string
-	Base    string
-	Path    string
-	Stat    os.FileInfo
-	Content io.Reader
-}
-
-func (f *File) Close() error {
-	if closer, ok := f.Content.(io.Closer); ok {
-		return closer.Close()
-	}
-	return nil
+type C struct {
+	log.Log
 }
 
 type Job func(<-chan File, chan<- File)
 
-//func (j Job) run(p <-chan File) Pipe {
-func (p Pipe) Pipe(j Job) Pipe {
+func (j Job) pipe(p <-chan File) Pipe {
+	//func (p Pipe) Pipe(j Job) Pipe {
 	out := make(chan File)
 	go func() {
 		defer close(out)
@@ -35,21 +21,26 @@ func (p Pipe) Pipe(j Job) Pipe {
 
 type Pipe <-chan File
 
-/*
 func (p Pipe) Pipe(j ...Job) Pipe {
 	switch len(j) {
 	case 0:
 		return p
 	case 1:
-		return j[0].run(p)
+		return j[0].pipe(p)
 	default:
-		return j[0].run(p).Pipe(j[1:]...)
+		return j[0].pipe(p).Pipe(j[1:]...)
 	}
 }
-*/
 
-func (p Pipe) Wait() {
+func (p Pipe) Wait() error {
+	//Waits for the "build" to Pipe to finish and closes all
+	// files, returns the first error.
+	var err error
 	for f := range p {
-		f.Close()
+		e := f.Close()
+		if err == nil && e != nil {
+			err = e
+		}
 	}
+	return err
 }

@@ -2,13 +2,15 @@ package s
 
 import (
 	"fmt"
-	"log"
 	"sync"
+
+	"github.com/omeid/slurp/s/log"
 )
 
-type Task func() error
+type Task func(*C) error
 
 type task struct {
+	name string
 	deps taskstack
 	task Task
 }
@@ -20,7 +22,7 @@ type taskerror struct {
 	err  error
 }
 
-func (t *task) run() error {
+func (t *task) run(c *C) error {
 
 	errs := make(chan taskerror)
 	cancel := make(chan struct{}, len(t.deps))
@@ -35,7 +37,7 @@ func (t *task) run() error {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					errs <- taskerror{name, task.run()}
+					errs <- taskerror{name, task.run(c)}
 				}()
 			}
 		}
@@ -47,7 +49,7 @@ func (t *task) run() error {
 	for err := range errs {
 		if err.err != nil {
 			cancel <- struct{}{}
-			log.Println(err.err)
+			c.Println(err.err)
 			failedjobs = append(failedjobs, err.name)
 		}
 	}
@@ -56,20 +58,26 @@ func (t *task) run() error {
 		return fmt.Errorf("Task Canacled. Reason: Failed Dependency (%s).", failedjobs)
 	}
 
-	return t.task()
+	return t.task(&C{c.New(fmt.Sprintf("Task %s: ", t.name))})
 }
 
 type Build struct {
+	*C
 	tasks taskstack
 }
 
 func NewBuild() *Build {
-	return &Build{tasks: make(taskstack)}
+	return &Build{C: &C{log.New()}, tasks: make(taskstack)}
 }
 
 func (b *Build) Task(name string, deps []string, Task Task) {
+
+	if _, ok := b.tasks[name]; ok {
+		b.Fatalf("Duplicate task: %s", name)
+	}
+
 	Deps := make(taskstack)
-	t := task{deps: Deps, task: Task}
+	t := task{name: name, deps: Deps, task: Task}
 
 	var ok bool
 
@@ -77,7 +85,7 @@ func (b *Build) Task(name string, deps []string, Task Task) {
 	for _, dep := range deps {
 		t.deps[dep], ok = b.tasks[dep]
 		if !ok {
-			log.Fatalf("Missing Task %s. Required by Task %s.")
+			b.Fatalf("Missing Task %s. Required by Task %s.", dep, name)
 		}
 	}
 
@@ -88,22 +96,22 @@ type Waiter interface {
 	Wait()
 }
 
-func (b *Build) Run(tasks ...string) Waiter {
+func (b *Build) Run(tasks []string) Waiter {
 
 	var wg sync.WaitGroup
 
 	for _, name := range tasks {
 		task, ok := b.tasks[name]
 		if !ok {
-			log.Printf("No Such Task: %s", task)
+			b.Printf("No Such Task: %s", task)
 			break
 		}
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := task.run()
+			err := task.run(b.C)
 			if err != nil {
-				log.Println(err)
+				b.Println(err)
 			}
 		}()
 	}

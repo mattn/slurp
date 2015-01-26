@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -15,28 +16,32 @@ import (
 )
 
 //The Slupr runner.
+var install = flag.Bool("install", false, "install current build.")
 
 var (
+	gopath = os.Getenv("GOPATH")
+
 	slurpfile = "slurp.go"
-	cwd       string
-	gopath    = os.Getenv("GOPATH")
+
+	runner string = "slurp."
+	cwd    string
 )
 
 func main() {
 
-	log.Println("Start.")
+	flag.Parse()
+
 	if gopath == "" {
 		log.Fatal("$GOPATH must be set.")
 	}
 
-	err := run()
+	err := run(*install)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Done.")
 }
 
-func run() error {
+func run(install bool) error {
 	path, err := generate()
 	if err != nil {
 		return err
@@ -44,8 +49,21 @@ func run() error {
 	//Don't forget to clean up.
 	//defer os.RemoveAll(path)
 
-	cmd := exec.Command("go", "run", filepath.Join(path, "main.go"))
+	var args []string
 
+	if install {
+		runnerpkg, err := filepath.Rel(filepath.Join(gopath, "src"), filepath.Join(filepath.Join(path, runner)))
+		if err != nil {
+			return err
+		}
+		args = []string{"install", runnerpkg}
+
+	} else {
+		args = []string{"run", filepath.Join(filepath.Join(path, runner, "main.go"))}
+		args = append(args, flag.Args()...)
+	}
+
+	cmd := exec.Command("go", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -74,6 +92,13 @@ func generate() (string, error) {
 	}
 
 	cwd, err = os.Getwd()
+	if err != nil {
+		return path, err
+	}
+
+	runner = runner + filepath.Base(cwd)
+	runnerpkg := filepath.Join(path, runner)
+	err = os.Mkdir(runnerpkg, 0700)
 	if err != nil {
 		return path, err
 	}
@@ -111,14 +136,14 @@ func generate() (string, error) {
 		}
 	}
 
-	file, err := os.Create(filepath.Join(path, "main.go"))
+	file, err := os.Create(filepath.Join(runnerpkg, "main.go"))
 
 	tmp, err = filepath.Rel(filepath.Join(gopath, "src"), path)
 	if err != nil {
 		return path, err
 	}
 
-	err = runner.Execute(file, tmp) //This should never fail, see MustParse.
+	err = runnerSrc.Execute(file, tmp) //This should never fail, see MustParse.
 	err = file.Close()
 
 	if err != nil {
@@ -140,29 +165,33 @@ func writeFileSet(filepath string, fset *token.FileSet, node interface{}) error 
 	return format.Node(file, fset, node)
 }
 
-var runner = template.Must(template.New("main").Parse(`
+var runnerSrc = template.Must(template.New("main").Parse(`
 package main
 
 import (
-  "log"
+  "flag"
+  "strings"
 
   "github.com/omeid/slurp/s"
 
   client "{{ . }}/tmp"
 )
 
-func init() {
-  log.Println("Starting...")
-}
-
 func main() {
-  log.Println("Running....")
+
+  flag.Parse()
 
   slurp := s.NewBuild()
-  
+
   client.Slurp(slurp)
 
-  slurp.Run("default").Wait()
+  tasks := flag.Args()
+  if len(tasks) == 0 {
+	tasks = []string{"default"}
+  }
 
-  log.Println("End.")
-}`))
+  slurp.Printf("Running: %s", strings.Join(tasks, ","))
+  slurp.Run(tasks).Wait()
+  slurp.Println("Finished.")
+}
+`))
