@@ -32,9 +32,8 @@ func Src(c *s.C, globs ...string) s.Pipe {
 	go func() {
 		defer close(pipe)
 
-		for file, pattern := range files {
-
-			f, err := os.Open(file)
+		for matchpair := range files {
+			f, err := os.Open(matchpair.Name)
 			if err != nil {
 				c.Println(err)
 				return
@@ -44,7 +43,7 @@ func Src(c *s.C, globs ...string) s.Pipe {
 				c.Println(err)
 				return
 			}
-			pipe <- s.File{Cwd: cwd, Dir: glob.Dir(pattern), Path: file, Stat: Stat, Content: f}
+			pipe <- s.File{Cwd: cwd, Dir: glob.Dir(matchpair.Glob), Path: matchpair.Name, Stat: Stat, Content: f}
 		}
 
 	}()

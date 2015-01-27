@@ -19,66 +19,81 @@ func Base(glob string) string {
 
 func Match(pattern, name string) (bool, error) {
 
-  negative := pattern != "" && pattern[0] == '!'
-  if negative {
-	pattern = pattern[1:]
-  }
-
-  m, err := filepath.Match(pattern, name)
-  return m != negative, err
-}
-
-func Filter(pattern string, files []string) ([]string, error) {
-	isNot, err := Match(pattern, "")
-	if err != nil {
-		return nil, err
-	}
-
-	if isNot {
+	negative := pattern != "" && pattern[0] == '!'
+	if negative {
 		pattern = pattern[1:]
 	}
 
-	out := []string{}
-
-	for _, file := range files {
-		if match, _ := filepath.Match(pattern, file); match != isNot {
-			out = append(out, file)
-		}
-	}
-	return out, nil
+	m, err := filepath.Match(pattern, name)
+	return m != negative, err
 }
 
-func Glob(globs ...string) (map[string]string, error) {
+type MatchPair struct {
+	Glob string
+	Name string
+}
 
-	matches := make(map[string]string)
+type pattern struct {
+	Glob     string
+	Negative bool
+}
+
+func excluded(i int, p []pattern, name string) bool {
+
+	for i := i; i < len(p); i++ {
+		if !p[i].Negative {
+			continue
+		}
+		if m, _ := filepath.Match(p[i].Glob, name); m {
+			return true
+		}
+	}
+	return false
+}
+
+func Glob(globs ...string) (<-chan MatchPair, error) {
+
+	//defer close(out)
+
+	patterns := []pattern{}
 
 	for _, glob := range globs {
-
-		isNot, err := Match(glob, "")
+		negative, err := Match(glob, "")
 		if err != nil {
 			return nil, err
 		}
 
-		if isNot {
+		if negative {
 			glob = glob[1:]
+		}
 
-			for file, _ := range matches {
-				if match, _ := filepath.Match(glob, file); match {
-					delete(matches, file)
-				}
-			}
-		} else {
+		patterns = append(patterns, pattern{glob, negative})
+	}
 
-			files, err := filepath.Glob(glob)
-			if err != nil {
-				return matches, err
+	matches := make(chan MatchPair)
+	go func() {
+
+		seen := make(map[string]struct{})
+
+		defer close(matches)
+		for i, pattern := range patterns {
+
+			if pattern.Negative {
+				continue
 			}
+			//Patterns already checked and fs errors are ignored. so no error handling here.
+			files, _ := filepath.Glob(pattern.Glob)
 
 			for _, file := range files {
-				matches[file] = glob
+				if _, seen := seen[file]; seen || excluded(i, patterns, file) {
+					continue
+				}
+
+				seen[file] = struct{}{}
+				matches <- MatchPair{pattern.Glob, file}
 			}
 		}
-	}
+	}()
 
 	return matches, nil
 }
