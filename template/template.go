@@ -13,13 +13,16 @@ type executable interface {
 	Execute(io.Writer, interface{}) error
 }
 
-func NewTemplateReadCloser(wg sync.WaitGroup, e executable, data interface{}) templateReadCloser {
+func NewTemplateReadCloser(c *s.C, wg sync.WaitGroup, e executable, data interface{}) templateReadCloser {
 
 	buf := new(bytes.Buffer)
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
-		e.Execute(buf, data)
+		err := e.Execute(buf, data)
+		if err != nil {
+			c.Println(err)
+		}
 	}()
 
 	return templateReadCloser{buf}
@@ -57,7 +60,7 @@ func HTML(c *s.C, data interface{}) s.Job {
 				break
 			}
 
-			f.Content = NewTemplateReadCloser(wg, template, data)
+			f.Content = NewTemplateReadCloser(c, wg, template, data)
 
 			out <- f
 		}
