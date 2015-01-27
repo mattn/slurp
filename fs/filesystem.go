@@ -56,6 +56,8 @@ func Dest(c *s.C, dst string) s.Job {
 	return func(files <-chan s.File, out chan<- s.File) {
 
 		var wg sync.WaitGroup
+		defer wg.Wait()
+
 		for file := range files {
 
 			realpath, _ := filepath.Rel(file.Dir, file.Path)
@@ -87,6 +89,5 @@ func Dest(c *s.C, dst string) s.Job {
 			out <- file
 		}
 
-		wg.Wait()
 	}
 }

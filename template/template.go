@@ -4,7 +4,6 @@ import (
 	"bytes"
 	html "html/template"
 	"io"
-	"log"
 	"sync"
 
 	"github.com/omeid/slurp/s"
@@ -34,8 +33,7 @@ func (t templateReadCloser) Close() error {
 	return nil
 }
 
-//interface { New() New() Parse() Execute()
-func HTML(data interface{}) s.Job {
+func HTML(c *s.C, data interface{}) s.Job {
 	return func(in <-chan s.File, out chan<- s.File) {
 
 		templates := html.New("")
@@ -49,13 +47,13 @@ func HTML(data interface{}) s.Job {
 			_, err := buf.ReadFrom(f.Content)
 			f.Close()
 			if err != nil {
-				log.Println(err)
+				c.Println(err)
 				break
 			}
 
 			template, err := templates.New(f.Stat.Name()).Parse(buf.String())
 			if err != nil {
-				log.Println(err)
+				c.Println(err)
 				break
 			}
 

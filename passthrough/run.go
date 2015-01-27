@@ -13,6 +13,8 @@ func Run(c *s.C, name string, args ...string) s.Job {
 
 		//Because programs block, zip is not an streaming archive, we don't want to block.
 		var wg sync.WaitGroup
+		defer wg.Wait()
+
 		for file := range in {
 
 			cmd := exec.Command(name, args...)
@@ -43,6 +45,5 @@ func Run(c *s.C, name string, args ...string) s.Job {
 
 		}
 
-		wg.Wait()
 	}
 }
