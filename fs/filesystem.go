@@ -55,7 +55,7 @@ func Dest(c *s.C, dst string) s.Job {
 	return func(files <-chan s.File, out chan<- s.File) {
 		for file := range files {
 
-			path := filepath.Join(dst, file.Dir)
+			path := filepath.Join(dst, filepath.Dir(file.Stat.Name()))
 			err := os.MkdirAll(path, 0700)
 			if err != nil {
 				//c.Println(err)

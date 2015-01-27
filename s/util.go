@@ -29,8 +29,7 @@ func DoFunc(c *C, do func(*C, File) File) Job {
 //For The Glory of Debugging.
 func List(c *C) Job {
 	return DoFunc(c, func(c *C, f File) File {
-		c.Printf("f %+v\n", f)
-		c.Printf("f.Stat %+v\n", f.Stat)
+		c.Printf("File: %+v ", f)
 		return f
 	})
 }

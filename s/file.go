@@ -15,7 +15,11 @@ type File struct {
 }
 
 func (f *File) Close() error {
-	if closer, ok := f.Content.(io.Closer); ok {
+	return Close(f.Content)
+}
+
+func Close(in interface{}) error {
+	if closer, ok := in.(io.Closer); ok {
 		return closer.Close()
 	}
 	return nil
