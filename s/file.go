@@ -25,8 +25,8 @@ func Close(in interface{}) error {
 	return nil
 }
 
-func FileInfoFrom(fi os.FileInfo) FileInfo {
-	return FileInfo{
+func FileInfoFrom(fi os.FileInfo) *FileInfo {
+	return &FileInfo{
 		fi.Name(),
 		fi.Size(),
 		fi.Mode(),

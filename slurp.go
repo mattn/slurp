@@ -54,7 +54,7 @@ func run(install bool) error {
 	var args []string
 
 	//if len(params) > 0 && params[0] == "init"
-	get := exec.Command("go", "get")
+	get := exec.Command("go", "get", "-v")
 	get.Dir = filepath.Join(path, "tmp")
 	get.Stdin = os.Stdin
 	get.Stdout = os.Stdout

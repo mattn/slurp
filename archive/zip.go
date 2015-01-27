@@ -3,7 +3,6 @@ package archive
 import (
 	"bytes"
 	"io/ioutil"
-	"path/filepath"
 	"sync"
 
 	"archive/zip"
@@ -41,11 +40,7 @@ func Unzip(c *s.C) s.Job {
 					content, err := f.Open()
 					if err != nil {
 					}
-
-					name := filepath.Base(f.Name)
-					//content = multibar.NewReadCloserHook(content, bars.MakeBar(int(f.FileInfo().Size()), name))
-
-					out <- s.File{Dir: filepath.Dir(f.Name), Path: name, Stat: f.FileInfo(), Content: content}
+					out <- s.File{Dir: "", Path: f.Name, Stat: f.FileInfo(), Content: content}
 
 				}
 			}(file)

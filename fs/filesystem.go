@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/omeid/slurp/glob"
 	"github.com/omeid/slurp/s"
@@ -53,9 +54,12 @@ func Src(c *s.C, globs ...string) s.Pipe {
 
 func Dest(c *s.C, dst string) s.Job {
 	return func(files <-chan s.File, out chan<- s.File) {
+
+		var wg sync.WaitGroup
 		for file := range files {
 
-			path := filepath.Join(dst, filepath.Dir(file.Stat.Name()))
+			realpath, _ := filepath.Rel(file.Dir, file.Path)
+			path := filepath.Join(dst, filepath.Dir(realpath))
 			err := os.MkdirAll(path, 0700)
 			if err != nil {
 				//c.Println(err)
@@ -64,15 +68,25 @@ func Dest(c *s.C, dst string) s.Job {
 
 			if !file.Stat.IsDir() {
 
-				realfile, err := os.Create(filepath.Join(path, file.Stat.Name()))
+				realfile, err := os.Create(filepath.Join(dst, realpath))
+
 				if err != nil {
 					c.Println(err)
 					return
 				}
-				io.Copy(realfile, file.Content)
-				realfile.Close()
+
+				wg.Add(1)
+				go func(realfile *os.File, content io.Reader) {
+					defer realfile.Close()
+					defer wg.Done()
+
+					io.Copy(realfile, content)
+					realfile.Close()
+				}(realfile, file.Content)
 			}
 			out <- file
 		}
+
+		wg.Wait()
 	}
 }
