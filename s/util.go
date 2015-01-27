@@ -1,7 +1,7 @@
 package s
 
 import (
-	"fmt"
+	"bytes"
 
 	"github.com/omeid/slurp/glob"
 )
@@ -29,8 +29,8 @@ func DoFunc(c *C, do func(*C, File) File) Job {
 //For The Glory of Debugging.
 func List(c *C) Job {
 	return DoFunc(c, func(c *C, f File) File {
-		fmt.Printf("f %+v\n", f)
-		fmt.Printf("f.Stat %+v\n", f.Stat)
+		c.Printf("f %+v\n", f)
+		c.Printf("f.Stat %+v\n", f.Stat)
 		return f
 	})
 }
@@ -43,4 +43,32 @@ func Filter(c *C, pattern string) Job {
 		}
 		return m
 	})
+}
+
+func Concat(c *C, output string) Job {
+	return func(files <-chan File, out chan<- File) {
+
+		var (
+			size    int64
+			bigfile = new(bytes.Buffer)
+		)
+
+		for f := range files {
+			n, err := bigfile.ReadFrom(f.Content)
+			if err != nil {
+				c.Println(err)
+				return
+			}
+			size += n
+
+			f.Close()
+		}
+
+		out <- File{
+			Dir:     "",
+			Path:    output,
+			Stat:    &FileInfo{size: size, name: output},
+			Content: bigfile,
+		}
+	}
 }

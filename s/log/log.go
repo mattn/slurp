@@ -10,9 +10,9 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
-var Rate = time.Second
+var Rate = time.Millisecond * 300
 
-var Flags = log.Ltime | log.Lmicroseconds
+var Flags = log.Ltime
 
 type Log interface {
 	Print(v ...interface{})
@@ -23,7 +23,7 @@ type Log interface {
 	Fatalf(format string, v ...interface{})
 	Fatalln(v ...interface{})
 
-	ReadProgress(io.Reader, string, int64) io.Reader
+	ReadProgress(io.Reader, string, int64) io.ReadCloser
 	Counter(string, int) *Counter
 
 	New(string) Log
@@ -37,6 +37,8 @@ func New() Log {
 type printFormater interface {
 	Printf(format string, v ...interface{})
 	Fatalf(format string, v ...interface{})
+
+	Flags() int //Just to distingush from Log.
 }
 
 type logger struct {
@@ -45,39 +47,39 @@ type logger struct {
 }
 
 func (l *logger) New(prefix string) Log {
-	return &logger{l, l.prefix + prefix}
+	return &logger{l.printFormater, l.prefix + prefix}
 }
 
 func (l *logger) Printf(format string, v ...interface{}) {
-	l.printFormater.Printf("%s %s", l.prefix, fmt.Sprintf(format, v...))
+	l.printFormater.Printf("%s%s", l.prefix, fmt.Sprintf(format, v...))
 }
 
 func (l *logger) Print(v ...interface{}) {
-	l.Printf("%s %s", l.prefix, fmt.Sprint(v...))
+	l.printFormater.Printf("%s%s", l.prefix, fmt.Sprint(v...))
 }
 
 func (l *logger) Println(v ...interface{}) {
-	l.Printf("%s %s", l.prefix, fmt.Sprintln(v...))
+	l.printFormater.Printf("%s%s", l.prefix, fmt.Sprint(v...))
 }
 
 func (l *logger) Fatalf(format string, v ...interface{}) {
-	l.printFormater.Fatalf("%s %s", l.prefix, fmt.Sprintf(format, v...))
+	l.printFormater.Fatalf("%s%s", l.prefix, fmt.Sprintf(format, v...))
 }
 
 func (l *logger) Fatal(v ...interface{}) {
-	l.Fatalf("%s %s", l.prefix, fmt.Sprint(v...))
+	l.printFormater.Fatalf("%s%s", l.prefix, fmt.Sprint(v...))
 }
 
 func (l *logger) Fatalln(v ...interface{}) {
-	l.Fatalf("%s %s", l.prefix, fmt.Sprintln(v...))
+	l.printFormater.Fatalf("%s%s", l.prefix, fmt.Sprint(v...))
 }
 
-func (l *logger) ReadProgress(r io.Reader, name string, size int64) io.Reader {
+func (l *logger) ReadProgress(r io.Reader, name string, size int64) io.ReadCloser {
 	return &ProgressBar{r, name, size, 0, l, humanize.Bytes(uint64(size)), 0, NewRateLimit(Rate)}
 }
 
 func (l *logger) Counter(name string, size int) *Counter {
-	return &Counter{name, size, 0, "", l, NewRateLimit(Rate)}
+	return &Counter{name, size, 0, "", l, NewRateLimit(Rate / 2)}
 }
 
 type ProgressBar struct {
@@ -95,20 +97,33 @@ type ProgressBar struct {
 	limit *ratelimit
 }
 
+func (p *ProgressBar) print() {
+	p.l.Printf("%s [%d%%] %s of %s\n",
+		p.name,
+		p.done*100/p.size,
+		humanize.Bytes(uint64(p.done)),
+		p.sizeHuman)
+}
 func (p *ProgressBar) Read(b []byte) (int, error) {
 	n, err := p.Reader.Read(b)
 	p.done += int64(n)
 
 	if (p.done-p.last) > (p.size/50) && !p.limit.Limit() {
-		p.l.Printf("%s [%d%%] %s of %s\n",
-			p.name,
-			p.done*100/p.size,
-			humanize.Bytes(uint64(p.done)),
-			p.sizeHuman)
 		p.last = p.done
+		p.print()
 	}
 
 	return n, err
+}
+
+func (p *ProgressBar) Close() error {
+	p.print()
+	var err error
+	c, ok := p.Reader.(io.Closer)
+	if ok {
+		err = c.Close()
+	}
+	return err
 }
 
 type Counter struct {
@@ -125,9 +140,11 @@ type Counter struct {
 func (c *Counter) Set(s int, last string) {
 	c.cur = s
 	c.last = last
-	c.print()
+	if !c.limit.Limit() || c.cur == c.size {
+		c.print()
+	}
 }
 
 func (c *Counter) print() {
-	c.l.Printf("%s [%v%%] %d of %d %s\n", c.name, c.cur*100/c.size, c.cur, c.size, c.last)
+	c.l.Printf("%s [%3d%%] %d of %d %s\n", c.name, c.cur*100/c.size, c.cur, c.size, c.last)
 }

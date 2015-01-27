@@ -13,6 +13,10 @@ type task struct {
 	name string
 	deps taskstack
 	task Task
+
+	called bool
+
+	lock sync.Mutex
 }
 
 type taskstack map[string]*task
@@ -24,6 +28,16 @@ type taskerror struct {
 
 func (t *task) run(c *C) error {
 
+	c = &C{c.New(fmt.Sprintf("%s: ", t.name))}
+
+	t.lock.Lock()
+	defer t.lock.Unlock()
+
+	if t.called {
+		return nil
+	}
+	c.Println("Starting.")
+
 	errs := make(chan taskerror)
 	cancel := make(chan struct{}, len(t.deps))
 	var wg sync.WaitGroup
@@ -34,9 +48,11 @@ func (t *task) run(c *C) error {
 			case <-cancel:
 				break
 			default:
+
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
+					c.Printf("Waiting for %s", name)
 					errs <- taskerror{name, task.run(c)}
 				}()
 			}
@@ -58,7 +74,13 @@ func (t *task) run(c *C) error {
 		return fmt.Errorf("Task Canacled. Reason: Failed Dependency (%s).", failedjobs)
 	}
 
-	return t.task(&C{c.New(fmt.Sprintf("Task %s: ", t.name))})
+	t.called = true
+	err := t.task(c)
+	if err == nil {
+		c.Println("Done.")
+	}
+
+	return err
 }
 
 type Build struct {

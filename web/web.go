@@ -36,6 +36,12 @@ func Get(c *s.C, urls ...string) s.Pipe {
 				c.Println(err)
 				break
 			}
+
+			if resp.StatusCode < 200 || resp.StatusCode > 399 {
+				c.Printf("%s (%s)", resp.Status, url)
+				continue
+			}
+
 			name := name(url, resp)
 
 			content := c.ReadProgress(resp.Body, "Downloading "+name, resp.ContentLength)

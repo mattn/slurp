@@ -41,6 +41,8 @@ func main() {
 	}
 }
 
+type Go struct{}
+
 func run(install bool) error {
 	path, err := generate()
 	if err != nil {
@@ -51,7 +53,19 @@ func run(install bool) error {
 
 	var args []string
 
+	//if len(params) > 0 && params[0] == "init"
+	get := exec.Command("go", "get")
+	get.Dir = filepath.Join(path, "tmp")
+	get.Stdin = os.Stdin
+	get.Stdout = os.Stdout
+	get.Stderr = os.Stderr
+
 	if install {
+		err := get.Run()
+		if err != nil {
+			return err
+		}
+
 		runnerpkg, err := filepath.Rel(filepath.Join(gopath, "src"), filepath.Join(filepath.Join(path, runner)))
 		if err != nil {
 			return err
@@ -59,8 +73,17 @@ func run(install bool) error {
 		args = []string{"install", runnerpkg}
 
 	} else {
+		params := flag.Args()
+
+		if len(params) > 0 && params[0] == "init" {
+			err := get.Run()
+			if err != nil {
+				return err
+			}
+		}
+
 		args = []string{"run", filepath.Join(filepath.Join(path, runner, "main.go"))}
-		args = append(args, flag.Args()...)
+		args = append(args, params...)
 	}
 
 	cmd := exec.Command("go", args...)
