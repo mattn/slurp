@@ -48,8 +48,9 @@ func run(install bool) error {
 	if err != nil {
 		return err
 	}
+
 	//Don't forget to clean up.
-	//defer os.RemoveAll(path)
+	defer os.RemoveAll(path)
 
 	var args []string
 
