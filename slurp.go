@@ -15,16 +15,16 @@ import (
 	"text/template"
 )
 
-//The Slupr runner.
-var install = flag.Bool("install", false, "install current build.")
+var (
+	install = flag.Bool("install", false, "install current slurp.Go as slurp.PKG.")
+	bare    = flag.Bool("bare", false, "Run/Install the slurp.go file without any other files.")
+)
 
 var (
-	gopath = os.Getenv("GOPATH")
-
-	slurpfile = "slurp.go"
-
-	runner string = "slurp."
-	cwd    string
+	gopath           = os.Getenv("GOPATH")
+	slurpfile        = "slurp.go"
+	runner    string = "slurp."
+	cwd       string
 )
 
 func main() {
@@ -127,12 +127,28 @@ func generate() (string, error) {
 		return path, err
 	}
 
-	// Create the AST by parsing src.
+	//TODO, copy [*.go !_test.go] files into tmp first,
+	// this would allow slurp to work for broken packages
+	// with "-bare" as the package files will be excluded.
 	fset := token.NewFileSet() // positions are relative to fset
 
-	pkgs, err := parser.ParseDir(fset, cwd, nil, parser.ParseComments)
-	if err != nil {
-		return path, err
+	var pkgs map[string]*ast.Package
+
+	if *bare {
+		pkgs = make(map[string]*ast.Package)
+		src, err := parser.ParseFile(fset, slurpfile, nil, parser.ParseComments)
+		if err != nil {
+			return path, err
+		}
+		pkgs[src.Name.Name] = &ast.Package{
+			Name:  src.Name.Name,
+			Files: map[string]*ast.File{filepath.Join(cwd, slurpfile): src},
+		}
+	} else {
+		pkgs, err = parser.ParseDir(fset, cwd, nil, parser.ParseComments)
+		if err != nil {
+			return path, err
+		}
 	}
 
 	if len(pkgs) > 1 {
@@ -144,6 +160,7 @@ func generate() (string, error) {
 		// witout understanding the names.
 		for name, f := range pkg.Files {
 			f.Name.Name = "tmp" //Change package name
+
 			if filepath.Base(name) == slurpfile {
 				f.Comments = []*ast.CommentGroup{} //Remove comments
 			}
@@ -161,15 +178,21 @@ func generate() (string, error) {
 	}
 
 	file, err := os.Create(filepath.Join(runnerpkg, "main.go"))
+	if err != nil {
+		return path, err
+	}
 
 	tmp, err = filepath.Rel(filepath.Join(gopath, "src"), path)
 	if err != nil {
 		return path, err
 	}
 
-	err = runnerSrc.Execute(file, tmp) //This should never fail, see MustParse.
-	err = file.Close()
+	err = runnerSrc.Execute(file, tmp)
+	if err != nil {
+		return path, err
+	}
 
+	err = file.Close()
 	if err != nil {
 		return path, err
 	}
