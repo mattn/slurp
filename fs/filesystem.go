@@ -43,7 +43,7 @@ func Src(c *s.C, globs ...string) s.Pipe {
 				c.Println(err)
 				return
 			}
-			pipe <- s.File{Cwd: cwd, Dir: glob.Dir(matchpair.Glob), Path: matchpair.Name, Stat: Stat, Content: f}
+			pipe <- s.File{Reader: f, Cwd: cwd, Dir: glob.Dir(matchpair.Glob), Path: matchpair.Name, Stat: Stat}
 		}
 
 	}()
@@ -77,13 +77,13 @@ func Dest(c *s.C, dst string) s.Job {
 				}
 
 				wg.Add(1)
-				go func(realfile *os.File, content io.Reader) {
+				go func(realfile *os.File, file io.Reader) {
 					defer realfile.Close()
 					defer wg.Done()
 
-					io.Copy(realfile, content)
+					io.Copy(realfile, file)
 					realfile.Close()
-				}(realfile, file.Content)
+				}(realfile, file)
 			}
 			out <- file
 		}

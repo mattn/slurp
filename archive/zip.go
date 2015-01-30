@@ -21,7 +21,7 @@ func Unzip(c *s.C) s.Job {
 				wg.Add(1)
 				defer wg.Done()
 
-				raw, err := ioutil.ReadAll(file.Content)
+				raw, err := ioutil.ReadAll(file)
 				file.Close()
 
 				r, err := zip.NewReader(bytes.NewReader(raw), file.Stat.Size())
@@ -40,7 +40,7 @@ func Unzip(c *s.C) s.Job {
 					content, err := f.Open()
 					if err != nil {
 					}
-					out <- s.File{Dir: "", Path: f.Name, Stat: f.FileInfo(), Content: content}
+					out <- s.File{Reader: content, Dir: "", Path: f.Name, Stat: f.FileInfo()}
 
 				}
 			}(file)

@@ -47,7 +47,7 @@ func HTML(c *s.C, data interface{}) s.Job {
 		for f := range in {
 
 			buf := new(bytes.Buffer)
-			_, err := buf.ReadFrom(f.Content)
+			_, err := buf.ReadFrom(f.Reader)
 			f.Close()
 			if err != nil {
 				c.Println(err)
@@ -60,7 +60,7 @@ func HTML(c *s.C, data interface{}) s.Job {
 				break
 			}
 
-			f.Content = NewTemplateReadCloser(c, wg, template, data)
+			f.Reader = NewTemplateReadCloser(c, wg, template, data)
 
 			out <- f
 		}

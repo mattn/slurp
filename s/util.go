@@ -53,7 +53,7 @@ func Concat(c *C, output string) Job {
 		)
 
 		for f := range files {
-			n, err := bigfile.ReadFrom(f.Content)
+			n, err := bigfile.ReadFrom(f)
 			if err != nil {
 				c.Println(err)
 				return
@@ -64,10 +64,10 @@ func Concat(c *C, output string) Job {
 		}
 
 		out <- File{
-			Dir:     "",
-			Path:    output,
-			Stat:    &FileInfo{size: size, name: output},
-			Content: bigfile,
+			Reader: bigfile,
+			Dir:    "",
+			Path:   output,
+			Stat:   &FileInfo{size: size, name: output},
 		}
 	}
 }

@@ -50,7 +50,7 @@ func Get(c *s.C, urls ...string) s.Pipe {
 			Stat.SetName(name)
 			Stat.SetSize(resp.ContentLength)
 
-			pipe <- s.File{Cwd: "", Dir: "", Path: name, Stat: Stat, Content: content}
+			pipe <- s.File{Reader: content, Cwd: "", Dir: "", Path: name, Stat: Stat}
 		}
 	}()
 

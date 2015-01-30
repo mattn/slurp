@@ -20,7 +20,7 @@ func Run(c *s.C, name string, args ...string) s.Job {
 			cmd := exec.Command(name, args...)
 			cmd.Stderr = os.Stderr //TODO: io.Writer logger.
 
-			cmd.Stdin = file.Content
+			cmd.Stdin = file.Reader
 			content, err := cmd.StdoutPipe()
 			if err != nil {
 				c.Println(err)
@@ -40,7 +40,7 @@ func Run(c *s.C, name string, args ...string) s.Job {
 				cmd.Wait()
 			}(cmd)
 
-			file.Content = content
+			file.Reader = content
 			out <- file
 
 		}

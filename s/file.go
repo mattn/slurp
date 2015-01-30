@@ -7,15 +7,15 @@ import (
 )
 
 type File struct {
-	Cwd     string //Where are we?
-	Dir     string //Dir, usually glob.Base
-	Path    string //Full path.
-	Stat    os.FileInfo
-	Content io.Reader
+	io.Reader
+	Cwd  string //Where are we?
+	Dir  string //Dir, usually glob.Base
+	Path string //Full path.
+	Stat os.FileInfo
 }
 
 func (f *File) Close() error {
-	return Close(f.Content)
+	return Close(f.Reader)
 }
 
 func Close(in interface{}) error {
