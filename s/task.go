@@ -41,20 +41,20 @@ func (t *task) run(c *C) error {
 	errs := make(chan taskerror)
 	cancel := make(chan struct{}, len(t.deps))
 	var wg sync.WaitGroup
-	go func(done chan taskerror) {
+	go func(errs chan taskerror) {
 		defer close(errs)
-		for name, task := range t.deps {
+		for name, t := range t.deps {
 			select {
 			case <-cancel:
 				break
 			default:
 
 				wg.Add(1)
-				go func() {
+				go func(t *task) {
 					defer wg.Done()
-					c.Printf("Waiting for %s", name)
-					errs <- taskerror{name, task.run(c)}
-				}()
+					c.Printf("Waiting for %s", t.name)
+					errs <- taskerror{name, t.run(c)}
+				}(t)
 			}
 		}
 		wg.Wait()
