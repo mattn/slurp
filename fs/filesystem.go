@@ -10,6 +10,20 @@ import (
 	"github.com/omeid/slurp/s"
 )
 
+func Read(path string) (*s.File, error) {
+	Stat, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &s.File{Reader: f, Path: path, Stat: Stat}, nil
+}
+
 func Src(c *s.C, globs ...string) s.Pipe {
 
 	pipe := make(chan s.File)
@@ -33,17 +47,16 @@ func Src(c *s.C, globs ...string) s.Pipe {
 		defer close(pipe)
 
 		for matchpair := range files {
-			f, err := os.Open(matchpair.Name)
+
+			f, err := Read(matchpair.Name)
 			if err != nil {
 				c.Println(err)
-				return
+				continue
 			}
-			Stat, err := f.Stat()
-			if err != nil {
-				c.Println(err)
-				return
-			}
-			pipe <- s.File{Reader: f, Cwd: cwd, Dir: glob.Dir(matchpair.Glob), Path: matchpair.Name, Stat: Stat}
+
+			f.Cwd = cwd
+			f.Dir = glob.Dir(matchpair.Glob)
+			pipe <- *f
 		}
 
 	}()
