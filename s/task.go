@@ -3,8 +3,6 @@ package s
 import (
 	"fmt"
 	"sync"
-
-	"github.com/omeid/slurp/s/log"
 )
 
 type Task func(*C) error
@@ -81,62 +79,4 @@ func (t *task) run(c *C) error {
 	}
 
 	return err
-}
-
-type Build struct {
-	*C
-	tasks taskstack
-}
-
-func NewBuild() *Build {
-	return &Build{C: &C{log.New()}, tasks: make(taskstack)}
-}
-
-func (b *Build) Task(name string, deps []string, Task Task) {
-
-	if _, ok := b.tasks[name]; ok {
-		b.Fatalf("Duplicate task: %s", name)
-	}
-
-	Deps := make(taskstack)
-	t := task{name: name, deps: Deps, task: Task}
-
-	var ok bool
-
-	//TODO: Circular dependency issue.
-	for _, dep := range deps {
-		t.deps[dep], ok = b.tasks[dep]
-		if !ok {
-			b.Fatalf("Missing Task %s. Required by Task %s.", dep, name)
-		}
-	}
-
-	b.tasks[name] = &t
-}
-
-type Waiter interface {
-	Wait()
-}
-
-func (b *Build) Run(tasks []string) Waiter {
-
-	var wg sync.WaitGroup
-
-	for _, name := range tasks {
-		task, ok := b.tasks[name]
-		if !ok {
-			b.Printf("No Such Task: %s", task)
-			break
-		}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := task.run(b.C)
-			if err != nil {
-				b.Println(err)
-			}
-		}()
-	}
-
-	return &wg
 }
