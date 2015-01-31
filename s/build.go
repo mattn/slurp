@@ -13,6 +13,8 @@ type Waiter interface {
 type Build struct {
 	*C
 	tasks taskstack
+
+	cleanups []func()
 }
 
 func NewBuild() *Build {
@@ -67,6 +69,14 @@ func (b *Build) Run(tasks []string) Waiter {
 	return &wg
 }
 
+func (b *Build) Defer(d func()) {
+	b.cleanups = append(b.cleanups, d)
+}
+
 func (b *Build) Close() {
+	for _, c := range b.cleanups {
+		c()
+	}
+
 	b.Println("Goodbye.")
 }

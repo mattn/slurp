@@ -253,6 +253,6 @@ func main() {
 
   slurp.Printf("Running: %s", strings.Join(tasks, "," ))
   slurp.Run(tasks).Wait()
-  slurp.Println("Finished.")
+  slurp.Close() 
 }
 `))

@@ -12,7 +12,7 @@ type task struct {
 	deps taskstack
 	task Task
 
-	called bool
+	//called bool
 
 	lock sync.Mutex
 }
@@ -31,9 +31,9 @@ func (t *task) run(c *C) error {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 
-	if t.called {
-		return nil
-	}
+	//if t.called {
+	//		return nil
+	//	}
 	c.Println("Starting.")
 
 	errs := make(chan taskerror)
@@ -72,7 +72,7 @@ func (t *task) run(c *C) error {
 		return fmt.Errorf("Task Canacled. Reason: Failed Dependency (%s).", failedjobs)
 	}
 
-	t.called = true
+	//t.called = true
 	err := t.task(c)
 	if err == nil {
 		c.Println("Done.")
