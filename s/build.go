@@ -34,7 +34,7 @@ func (b *Build) Task(name string, deps []string, Task Task) {
 			b.Fatalf("Missing Task %s. Required by Task %s.", dep, name)
 		}
 		_, ok = d.deps[name]
-		if !ok {
+		if ok {
 			b.Fatalf("Circular dependency %s requies %s and around.", d.name, name)
 		}
 
@@ -65,4 +65,8 @@ func (b *Build) Run(tasks []string) Waiter {
 	}
 
 	return &wg
+}
+
+func (b *Build) Close() {
+	b.Println("Goodbye.")
 }
