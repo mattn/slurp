@@ -16,15 +16,13 @@ import (
 )
 
 var (
-	install = flag.Bool("install", false, "install current slurp.Go as slurp.PKG.")
-	bare    = flag.Bool("bare", false, "Run/Install the slurp.go file without any other files.")
-)
+	gopath        = os.Getenv("GOPATH")
+	runner string = "slurp."
+	cwd    string
 
-var (
-	gopath           = os.Getenv("GOPATH")
-	slurpfile        = "slurp.go"
-	runner    string = "slurp."
-	cwd       string
+	install   = flag.Bool("install", false, "install current slurp.Go as slurp.PKG.")
+	bare      = flag.Bool("bare", false, "Run/Install the slurp.go file without any other files.")
+	slurpfile = flag.String("slurpfile", "slurp.go", "The file that includes the Slurp(*s.Build) function, use by -bare")
 )
 
 func main() {
@@ -40,8 +38,6 @@ func main() {
 		log.Fatal(err)
 	}
 }
-
-type Go struct{}
 
 func run(install bool) error {
 	path, err := generate()
@@ -136,13 +132,13 @@ func generate() (string, error) {
 
 	if *bare {
 		pkgs = make(map[string]*ast.Package)
-		src, err := parser.ParseFile(fset, slurpfile, nil, parser.ParseComments)
+		src, err := parser.ParseFile(fset, *slurpfile, nil, parser.ParseComments)
 		if err != nil {
 			return path, err
 		}
 		pkgs[src.Name.Name] = &ast.Package{
 			Name:  src.Name.Name,
-			Files: map[string]*ast.File{filepath.Join(cwd, slurpfile): src},
+			Files: map[string]*ast.File{filepath.Join(cwd, *slurpfile): src},
 		}
 	} else {
 		pkgs, err = parser.ParseDir(fset, cwd, nil, parser.ParseComments)
@@ -248,7 +244,7 @@ func main() {
   }
 
   slurp.Printf("Running: %s", strings.Join(tasks, "," ))
-  slurp.Run(tasks).Wait()
+  slurp.Run(slurp.C, tasks...)
   slurp.Close() 
 }
 `))

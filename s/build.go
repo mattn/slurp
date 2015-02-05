@@ -46,8 +46,11 @@ func (b *Build) Task(name string, deps []string, Task Task) {
 	b.tasks[name] = &t
 }
 
-func (b *Build) Run(tasks []string) Waiter {
+func (b *Build) Run(c *C, tasks ...string) {
+	b.Start(c, tasks...).Wait()
+}
 
+func (b *Build) Start(c *C, tasks ...string) Waiter {
 	var wg sync.WaitGroup
 
 	for _, name := range tasks {
@@ -59,7 +62,7 @@ func (b *Build) Run(tasks []string) Waiter {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := task.run(b.C)
+			err := task.run(c)
 			if err != nil {
 				b.Println(err)
 			}
@@ -69,14 +72,12 @@ func (b *Build) Run(tasks []string) Waiter {
 	return &wg
 }
 
-func (b *Build) Defer(d func()) {
-	b.cleanups = append(b.cleanups, d)
+func (b *Build) Defer(fn func()) {
+	b.cleanups = append(b.cleanups, fn)
 }
 
 func (b *Build) Close() {
-	for _, c := range b.cleanups {
-		c()
+	for _, cleanup := range b.cleanups {
+		cleanup()
 	}
-
-	b.Println("Goodbye.")
 }
