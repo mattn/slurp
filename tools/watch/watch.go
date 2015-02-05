@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/omeid/slurp/glob"
 	"github.com/omeid/slurp/s"
+	"github.com/omeid/slurp/tools/glob"
 	"gopkg.in/fsnotify.v1"
 )
 

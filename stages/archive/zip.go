@@ -13,7 +13,6 @@ import (
 func Unzip(c *s.C) s.Job {
 	return func(in <-chan s.File, out chan<- s.File) {
 
-		//Because zip is not an streaming archive, we don't want to block.
 		var wg sync.WaitGroup
 		for file := range in {
 

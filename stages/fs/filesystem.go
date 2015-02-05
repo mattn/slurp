@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/omeid/slurp/glob"
 	"github.com/omeid/slurp/s"
+	"github.com/omeid/slurp/tools/glob"
 )
 
 func Read(path string) (*s.File, error) {

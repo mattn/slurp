@@ -3,7 +3,7 @@ package s
 import (
 	"bytes"
 
-	"github.com/omeid/slurp/glob"
+	"github.com/omeid/slurp/tools/glob"
 )
 
 func FilterFunc(c *C, filter func(File) bool) Job {

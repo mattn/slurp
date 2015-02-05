@@ -55,7 +55,7 @@ func run(install bool) error {
 	var args []string
 
 	//if len(params) > 0 && params[0] == "init"
-	get := exec.Command("go", "get", "-v")
+	get := exec.Command("go", "get", "-tags=slurp", "-v")
 	get.Dir = filepath.Join(path, "tmp")
 	get.Stdin = os.Stdin
 	get.Stdout = os.Stdout
@@ -71,7 +71,7 @@ func run(install bool) error {
 		if err != nil {
 			return err
 		}
-		args = []string{"install", runnerpkg}
+		args = []string{"install", "-tags=slurp", runnerpkg}
 
 	} else {
 		params := flag.Args()
@@ -83,7 +83,7 @@ func run(install bool) error {
 			}
 		}
 
-		args = []string{"run", filepath.Join(filepath.Join(path, runner, "main.go"))}
+		args = []string{"run", "-tags=slurp", filepath.Join(filepath.Join(path, runner, "main.go"))}
 		args = append(args, params...)
 	}
 
@@ -160,10 +160,6 @@ func generate() (string, error) {
 		// witout understanding the names.
 		for name, f := range pkg.Files {
 			f.Name.Name = "tmp" //Change package name
-
-			if filepath.Base(name) == slurpfile {
-				f.Comments = []*ast.CommentGroup{} //Remove comments
-			}
 
 			name, err = filepath.Rel(cwd, name)
 			if err != nil {
