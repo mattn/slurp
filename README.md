@@ -3,7 +3,7 @@
 # Slurp 
 Building with Go, easier than a slurp.
 
-Slurp is a [Gulp.js](http://gulpjs.com/) inspired build framework and toolkit designed with idiomatic Go [Pipelines](http://blog.golang.org/pipelines) and following principles: 
+Slurp is a [Gulp.js](http://gulpjs.com/) inspired build toolkit designed with idiomatic Go [Pipelines](http://blog.golang.org/pipelines) and following principles: 
 
 - Convention over configuration
 - Explicit is better than implicit.
@@ -19,11 +19,11 @@ Slurp is a [Gulp.js](http://gulpjs.com/) inspired build framework and toolkit de
 
 Slurp is made of two integral parts:
 
-### 1. The Framework 
+### 1. The Toolkit 
 
-The slurp framework provides a task harness that you can register tasks and dependencies, you can then run these tasks with slurp runner.
+The slurp toolkit provides a task harness that you can register tasks and dependencies, you can then run these tasks with slurp runner.
 
-A task is any function that accepts a pointer to `s.C` (Slurp Context) and returns an error.  
+A task is any function that accepts a pointer to `slurp.C` (Slurp Context) and returns an error.  
 The Context provides helpful logging functions. _it may be extended in the future_.
 
 ```go
@@ -38,7 +38,7 @@ b.Task("example-task", []string{"list", "of", "dependency", "tasks"},
 
 Following the Convention Over Configuration paradigm, slurps provides you with a collection of nimble tools to instrument a pipeline.
 
-A pipeline is created by a source _stage_ and typically piped to subsequent _transformation_ stages and a final _destitution_ stage.
+A pipeline is created by a source _stage_ and typically piped to subsequent _transformation_ stages and a final _destination_ stage.
 
 Currently Slurp provides two source stages `slurp/stages/fs` and `slurp/stages/web` that provide access to file-system and http source respectively.
 
@@ -82,7 +82,7 @@ Slurp uses the Slurp build tag. That is, it passes `-tags=slurp` to go tooling w
 this allows decoupling of build and project code. This means you can use Go tools just like you're used to, even if your
 project has a slurp file.
 
-Somewhat similar to `go test` Slurp expects a `Slurp(*b.Build)` function from your project, this is typically put in a file with the `// +build slurp` build tag.
+Somewhat similar to `go test` Slurp expects a `Slurp(*slurp.Build)` function from your project, this is typically put in a file with the `// +build slurp` build tag.
 
 `cat slurp.go`
 ```go
