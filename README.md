@@ -19,7 +19,7 @@ Slurp is a [Gulp.js](http://gulpjs.com/) inspired build framework and toolkit de
 
 Slurp is made of two integral parts:
 
-### 1. The Framework (slurp/s)
+### 1. The Framework 
 
 The slurp framework provides a task harness that you can register tasks and dependencies, you can then run these tasks with slurp runner.
 
@@ -69,13 +69,13 @@ b.Task("deps", nil, func(c *slurp.C) error {
 ```
 
 
-### 2. The Runner (slurp)
+### 2. The Runner (cmd/slurp)
 
 This is a cli tool that runs and help you compile your builders. It is go get’able and you can install with:
 
 ```bash
- $ go get github.com/omeid/slurp     # get it.
- $ go install github.com/omeid/slurp # install it.
+ $ go get github.com/omeid/slurp               # get it.
+ $ go install github.com/omeid/slurp/cmd/slurp # install it.
 ```
 
 Slurp uses the Slurp build tag. That is, it passes `-tags=slurp` to go tooling when building or running your project,
@@ -90,7 +90,7 @@ Somewhat similar to `go test` Slurp expects a `Slurp(*b.Build)` function from yo
 
 package main //Anything, even main.
 
-import "github.com/omeid/slurp/s"
+import "github.com/omeid/slurp"
 
 func Slurp(b *slurp.Build) {
 	b.Task("example-task", nil, func(c *slurp.C) error {
