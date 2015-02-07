@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/omeid/slurp/s"
+	"github.com/omeid/slurp"
 )
 
 func name(url string, response *http.Response) string {
@@ -21,9 +21,9 @@ func name(url string, response *http.Response) string {
 	return name
 }
 
-func Get(c *s.C, urls ...string) s.Pipe {
+func Get(c *slurp.C, urls ...string) slurp.Pipe {
 
-	pipe := make(chan s.File)
+	pipe := make(chan slurp.File)
 
 	go func() {
 		defer close(pipe)
@@ -46,19 +46,19 @@ func Get(c *s.C, urls ...string) s.Pipe {
 
 			content := c.ReadProgress(resp.Body, "Downloading "+name, resp.ContentLength)
 
-			Stat := &s.FileInfo{}
+			Stat := &slurp.FileInfo{}
 			Stat.SetName(name)
 			Stat.SetSize(resp.ContentLength)
 
-			pipe <- s.File{Reader: content, Cwd: "", Dir: "", Path: name, Stat: Stat}
+			pipe <- slurp.File{Reader: content, Cwd: "", Dir: "", Path: name, Stat: Stat}
 		}
 	}()
 
 	return pipe
 }
 
-func Put(url url.URL) s.Job {
-	return func(files <-chan s.File, out chan<- s.File) {
+func Put(url url.URL) slurp.Job {
+	return func(files <-chan slurp.File, out chan<- slurp.File) {
 		for file := range files {
 			_ = file
 			/*

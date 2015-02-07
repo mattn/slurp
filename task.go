@@ -1,4 +1,4 @@
-package s
+package slurp
 
 import (
 	"fmt"

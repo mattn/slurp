@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/omeid/slurp/s"
+	"github.com/omeid/slurp"
 	"github.com/omeid/slurp/tools/glob"
 )
 
-func Read(path string) (*s.File, error) {
+func Read(path string) (*slurp.File, error) {
 	Stat, err := os.Stat(path)
 	if err != nil {
 		return nil, err
@@ -21,12 +21,12 @@ func Read(path string) (*s.File, error) {
 		return nil, err
 	}
 
-	return &s.File{Reader: f, Path: path, Stat: Stat}, nil
+	return &slurp.File{Reader: f, Path: path, Stat: Stat}, nil
 }
 
-func Src(c *s.C, globs ...string) s.Pipe {
+func Src(c *slurp.C, globs ...string) slurp.Pipe {
 
-	pipe := make(chan s.File)
+	pipe := make(chan slurp.File)
 
 	files, err := glob.Glob(globs...)
 
@@ -64,8 +64,8 @@ func Src(c *s.C, globs ...string) s.Pipe {
 	return pipe
 }
 
-func Dest(c *s.C, dst string) s.Job {
-	return func(files <-chan s.File, out chan<- s.File) {
+func Dest(c *slurp.C, dst string) slurp.Job {
+	return func(files <-chan slurp.File, out chan<- slurp.File) {
 
 		var wg sync.WaitGroup
 		defer wg.Wait()

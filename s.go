@@ -1,6 +1,6 @@
-package s
+package slurp
 
-import "github.com/omeid/slurp/s/log"
+import "github.com/omeid/slurp/log"
 
 type C struct {
 	log.Log

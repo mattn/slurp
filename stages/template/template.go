@@ -6,14 +6,14 @@ import (
 	"io"
 	"sync"
 
-	"github.com/omeid/slurp/s"
+	"github.com/omeid/slurp"
 )
 
 type executable interface {
 	Execute(io.Writer, interface{}) error
 }
 
-func NewTemplateReadCloser(c *s.C, wg sync.WaitGroup, e executable, data interface{}) templateReadCloser {
+func NewTemplateReadCloser(c *slurp.C, wg sync.WaitGroup, e executable, data interface{}) templateReadCloser {
 
 	buf := new(bytes.Buffer)
 	wg.Add(1)
@@ -36,8 +36,8 @@ func (t templateReadCloser) Close() error {
 	return nil
 }
 
-func HTML(c *s.C, data interface{}) s.Job {
-	return func(in <-chan s.File, out chan<- s.File) {
+func HTML(c *slurp.C, data interface{}) slurp.Job {
+	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		templates := html.New("")
 

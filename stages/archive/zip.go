@@ -7,16 +7,16 @@ import (
 
 	"archive/zip"
 
-	"github.com/omeid/slurp/s"
+	"github.com/omeid/slurp"
 )
 
-func Unzip(c *s.C) s.Job {
-	return func(in <-chan s.File, out chan<- s.File) {
+func Unzip(c *slurp.C) slurp.Job {
+	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		var wg sync.WaitGroup
 		for file := range in {
 
-			go func(file s.File) {
+			go func(file slurp.File) {
 				wg.Add(1)
 				defer wg.Done()
 
@@ -39,7 +39,7 @@ func Unzip(c *s.C) s.Job {
 					content, err := f.Open()
 					if err != nil {
 					}
-					out <- s.File{Reader: content, Dir: "", Path: f.Name, Stat: f.FileInfo()}
+					out <- slurp.File{Reader: content, Dir: "", Path: f.Name, Stat: f.FileInfo()}
 
 				}
 			}(file)

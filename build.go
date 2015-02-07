@@ -1,9 +1,9 @@
-package s
+package slurp
 
 import (
 	"sync"
 
-	"github.com/omeid/slurp/s/log"
+	"github.com/omeid/slurp/log"
 )
 
 type Waiter interface {

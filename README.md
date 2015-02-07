@@ -29,7 +29,7 @@ The Context provides helpful logging functions. _it may be extended in the futur
 ```go
 b.Task("example-task", []string{"list", "of", "dependency", "tasks"},
 
-  func(c *s.C) error {
+  func(c *slurp.C) error {
     c.Println("Hello from example-task!")
   },
 
@@ -43,7 +43,7 @@ A pipeline is created by a source _stage_ and typically piped to subsequent _tra
 Currently Slurp provides two source stages `slurp/stages/fs` and `slurp/stages/web` that provide access to file-system and http source respectively.
 
 ```go
-b.Task("example-task-with-pipeline", nil , func(c *s.C) error {
+b.Task("example-task-with-pipeline", nil , func(c *slurp.C) error {
     //Read .tpl files from frontend/template.
     return fs.Src(c, "frontend/template/*.tpl").Pipe(
       //Compile them.
@@ -56,7 +56,7 @@ b.Task("example-task-with-pipeline", nil , func(c *s.C) error {
 
 ```go
 // Download deps.
-b.Task("deps", nil, func(c *s.C) error {
+b.Task("deps", nil, func(c *slurp.C) error {
     return web.Get(c,
       "https://github.com/twbs/bootstrap/archive/v3.3.2.zip",
       "https://github.com/FortAwesome/Font-Awesome/archive/v4.3.0.zip",
@@ -92,13 +92,13 @@ package main //Anything, even main.
 
 import "github.com/omeid/slurp/s"
 
-func Slurp(b *s.Build) {
-	b.Task("example-task", nil, func(c *s.C) error {
+func Slurp(b *slurp.Build) {
+	b.Task("example-task", nil, func(c *slurp.C) error {
 		c.Println("Hello!")
 		return nil
 	})
 
-	b.Task("default", []string{"example-task"}, func(c *s.C) error {
+	b.Task("default", []string{"example-task"}, func(c *slurp.C) error {
 		//This task is run when slurp is called without any task arguments.
 		c.Println("Hello!")
 		return nil

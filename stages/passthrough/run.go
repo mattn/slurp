@@ -5,11 +5,11 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/omeid/slurp/s"
+	"github.com/omeid/slurp"
 )
 
-func Run(c *s.C, name string, args ...string) s.Job {
-	return func(in <-chan s.File, out chan<- s.File) {
+func Run(c *slurp.C, name string, args ...string) slurp.Job {
+	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		//Because programs block, zip is not an streaming archive, we don't want to block.
 		var wg sync.WaitGroup
@@ -36,7 +36,7 @@ func Run(c *s.C, name string, args ...string) s.Job {
 			wg.Add(1)
 			go func(cmd *exec.Cmd) {
 				defer wg.Done()
-				defer s.Close(content)
+				defer slurp.Close(content)
 				cmd.Wait()
 			}(cmd)
 
