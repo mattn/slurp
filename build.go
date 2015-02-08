@@ -77,6 +77,11 @@ func (b *Build) Defer(fn func()) {
 	b.cleanups = append(b.cleanups, fn)
 }
 
+// Helper function. waits forever.
+func (b Build) Wait() {
+	<-make(chan struct{})
+}
+
 func (b *Build) Close() {
 	for _, cleanup := range b.cleanups {
 		cleanup()
