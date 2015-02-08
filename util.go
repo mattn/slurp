@@ -58,7 +58,8 @@ func Concat(c *C, output string) Job {
 				c.Println(err)
 				return
 			}
-			size += n
+			bigfile.WriteRune('\n')
+			size += n + 1
 
 			f.Close()
 		}

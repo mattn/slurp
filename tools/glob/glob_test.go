@@ -1,9 +1,6 @@
 package glob
 
-import (
-	"reflect"
-	"testing"
-)
+import "testing"
 
 func TestDir(t *testing.T) {
 
@@ -56,34 +53,4 @@ func TestMatch(t *testing.T) {
 			t.Fatalf("Expected %t For %s from Match. Got %t", match, glob, r)
 		}
 	}
-}
-
-func TestFilter(t *testing.T) {
-
-	input := []string{
-		"dir/a",
-		"dir/a.ext",
-		"a.txt",
-		"a",
-		"world/hello",
-		"hello/world",
-		"di/page",
-		"dir/a/a",
-		"dir/dir/dir/file.ext",
-	}
-
-	for glob, expect := range map[string][]string{
-		"dir/*":   []string{"dir/a", "dir/a.ext"},
-		"!dir/**": []string{"a.txt", "a", "world/ello", "hello/world"},
-	} {
-		result, err := Filter(glob, input)
-		if err != nil {
-			t.Fatalf("ERROR: %s  TEST: %s For %s from Match. Got %s", err, expect, glob, result)
-		}
-		if !reflect.DeepEqual(result, expect) {
-			t.Fatalf("Expected %s For %s from Match. Got %s", expect, glob, result)
-		}
-
-	}
-
 }

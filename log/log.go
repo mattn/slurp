@@ -98,7 +98,7 @@ type ProgressBar struct {
 }
 
 func (p *ProgressBar) print() {
-	p.l.Printf("%s [%d%%] %s of %s\n",
+	p.l.Printf("%s [%3d%%] %s of %s\n",
 		p.name,
 		p.done*100/p.size,
 		humanize.Bytes(uint64(p.done)),

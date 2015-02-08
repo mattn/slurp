@@ -12,16 +12,26 @@ import (
 
 type Cmd struct {
 	exec.Cmd
+
+	bin    string
+	params []string
 }
 
 func Command(bin string, args ...string) *Cmd {
 	return &Cmd{
-		Cmd: *exec.Command(bin, args...),
+		Cmd:    *exec.Command(bin, args...),
+		bin:    bin,
+		params: args,
 	}
 }
 
-func (r Cmd) New() *Cmd {
-	return &r
+func (r *Cmd) New() *Cmd {
+	cmd := Command(r.bin, r.params...)
+	cmd.Stdout = r.Stdout
+	cmd.Stderr = r.Stderr
+
+	return cmd
+
 }
 
 func (r *Cmd) Kill() error {

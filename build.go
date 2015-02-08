@@ -72,6 +72,7 @@ func (b *Build) Start(c *C, tasks ...string) Waiter {
 	return &wg
 }
 
+// Register a function to be called when gulp exists.
 func (b *Build) Defer(fn func()) {
 	b.cleanups = append(b.cleanups, fn)
 }

@@ -16,8 +16,8 @@ func Unzip(c *slurp.C) slurp.Job {
 		var wg sync.WaitGroup
 		for file := range in {
 
+			wg.Add(1)
 			go func(file slurp.File) {
-				wg.Add(1)
 				defer wg.Done()
 
 				raw, err := ioutil.ReadAll(file)

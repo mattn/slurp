@@ -38,16 +38,17 @@ type pattern struct {
 	Negative bool
 }
 
-func excluded(i int, p []pattern, name string) bool {
+func Excluded(patterns []pattern, name string) bool {
 
-	for i := i; i < len(p); i++ {
-		if !p[i].Negative {
+	for _, pattern := range patterns {
+		if !pattern.Negative {
 			continue
 		}
-		if m, _ := filepath.Match(p[i].Glob, name); m {
+		if m, _ := filepath.Match(pattern.Glob, name); m {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -85,7 +86,7 @@ func Glob(globs ...string) (<-chan MatchPair, error) {
 			files, _ := filepath.Glob(pattern.Glob)
 
 			for _, file := range files {
-				if _, seen := seen[file]; seen || excluded(i, patterns, file) {
+				if _, seen := seen[file]; seen || Excluded(patterns[i:], file) {
 					continue
 				}
 
