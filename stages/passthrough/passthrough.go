@@ -1,3 +1,9 @@
+/*
+passthrough allows you to pass files through an executable program.
+The program is executed for every single file, If you want to pass a series 
+of files through a single invocation of the program, please use slurp.Concat
+and pipe it to passtrhough to be processed by your designed program.
+*/
 package passthrough
 
 import (
@@ -8,7 +14,10 @@ import (
 	"github.com/omeid/slurp"
 )
 
-func Run(c *slurp.C, name string, args ...string) slurp.Job {
+// bin is the binary name, it will be passed to os/exec.Command, so the same
+// path rules applies.
+// the args are the argumetns passed to the program.
+func Run(c *slurp.C, bin string, args ...string) slurp.Job {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		//Because programs block, zip is not an streaming archive, we don't want to block.
@@ -17,7 +26,7 @@ func Run(c *slurp.C, name string, args ...string) slurp.Job {
 
 		for file := range in {
 
-			cmd := exec.Command(name, args...)
+			cmd := exec.Command(bin, args...)
 			cmd.Stderr = os.Stderr //TODO: io.Writer logger.
 
 			cmd.Stdin = file.Reader
