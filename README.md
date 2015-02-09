@@ -15,7 +15,6 @@ Slurp is a [Gulp.js](http://gulpjs.com/) inspired build toolkit designed with id
 > The tale of Gulp, Go, Go Templates, CSS, CoffeeScript, and minifiaction and building assets should go here.
 
 
-##### I am interested, how it works?
 
 Slurp is made of two integral parts:
 
@@ -127,7 +126,11 @@ $ slurp example-task
 Please see [Contributing](CONTRIBUTING.md)
 
 
-### TODO
+### Slurp in the wild:
+
+ - The obligatory [Todo App (Slurp)](https://github.com/omeid/slurp-todo)
+ - Your app?
+
 
 ### LICENSE
 The MIT License (MIT)
