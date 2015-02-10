@@ -1,3 +1,5 @@
+// Experimental resource embedding stage for Slurp.
+
 package resources
 
 import (

@@ -1,3 +1,5 @@
+//Package filesystem provides filesystem based Stages for Slurp.
+
 package fs
 
 import (
@@ -10,6 +12,8 @@ import (
 	"github.com/omeid/slurp/tools/glob"
 )
 
+// A simple helper function that reads the file from the given path and
+// returns a pointer to a slurp.File or an error.
 func Read(path string) (*slurp.File, error) {
 	Stat, err := os.Stat(path)
 	if err != nil {
@@ -24,6 +28,7 @@ func Read(path string) (*slurp.File, error) {
 	return &slurp.File{Reader: f, Path: path, Stat: Stat}, nil
 }
 
+//Src returns a channel of slurp.Files that match the provided pattern.
 func Src(c *slurp.C, globs ...string) slurp.Pipe {
 
 	pipe := make(chan slurp.File)
@@ -64,6 +69,8 @@ func Src(c *slurp.C, globs ...string) slurp.Pipe {
 	return pipe
 }
 
+// Dest writes the files from the input channel to the dst folder and pass
+// the files to output channel for further processing.
 func Dest(c *slurp.C, dst string) slurp.Stage {
 	return func(files <-chan slurp.File, out chan<- slurp.File) {
 

@@ -1,3 +1,5 @@
+//package template provides Go Templates compiling Stages for Slurp.
+
 package template
 
 import (
@@ -36,6 +38,11 @@ func (t templateReadCloser) Close() error {
 	return nil
 }
 
+
+// Compiles the input files a html/template using the provided data
+// and passes them down the line.
+// It creates an increamental collection of templates that allows accessing
+// templates from templates (Just pass the "required" templates first.)
 func HTML(c *slurp.C, data interface{}) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 

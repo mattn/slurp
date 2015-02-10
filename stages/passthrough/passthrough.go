@@ -20,7 +20,6 @@ import (
 func Run(c *slurp.C, bin string, args ...string) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
-		//Because programs block, zip is not an streaming archive, we don't want to block.
 		var wg sync.WaitGroup
 		defer wg.Wait()
 

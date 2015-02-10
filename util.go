@@ -6,6 +6,8 @@ import (
 	"github.com/omeid/slurp/tools/glob"
 )
 
+//A Filter stage, will either close or pass files to the next
+// Stage based on the output of the `filter` function.
 func FilterFunc(c *C, filter func(File) bool) Stage {
 	return func(files <-chan File, out chan<- File) {
 		for f := range files {
@@ -18,6 +20,8 @@ func FilterFunc(c *C, filter func(File) bool) Stage {
 	}
 }
 
+// A simple transformation Stage, sends the file to output
+// channel after passing it through the the "do" function.
 func DoFunc(c *C, do func(*C, File) File) Stage {
 	return func(files <-chan File, out chan<- File) {
 		for f := range files {
@@ -34,6 +38,8 @@ func List(c *C) Stage {
 	})
 }
 
+//Filters out files based on a pattern, if they match,
+// they will be closed, otherwise sent to the output channel.
 func Filter(c *C, pattern string) Stage {
 	return FilterFunc(c, func(f File) bool {
 		m, err := glob.Match(pattern, f.Stat.Name())
@@ -44,7 +50,9 @@ func Filter(c *C, pattern string) Stage {
 	})
 }
 
-func Concat(c *C, output string) Stage {
+// Concatenates all the files from the input channel
+// and passes them to output channel with the given name.
+func Concat(c *C, name string) Stage {
 	return func(files <-chan File, out chan<- File) {
 
 		var (
@@ -67,8 +75,8 @@ func Concat(c *C, output string) Stage {
 		out <- File{
 			Reader: bigfile,
 			Dir:    "",
-			Path:   output,
-			Stat:   &FileInfo{size: size, name: output},
+			Path:   name,
+			Stat:   &FileInfo{size: size, name: name},
 		}
 	}
 }

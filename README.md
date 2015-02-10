@@ -1,5 +1,5 @@
 > Heads up! This is pre-release software.
-
+[![GoDoc](https://godoc.org/github.com/omeid/slurp?status.svg)](https://godoc.org/github.com/omeid/slurp)
 # Slurp 
 Building with Go, easier than a slurp.
 
@@ -126,10 +126,8 @@ $ slurp example-task
 Please see [Contributing](CONTRIBUTING.md)
 
 
-### Slurp in the wild:
-
+### Examples
  - The obligatory [Todo App (Slurp)](https://github.com/omeid/slurp-todo)
- - Your app?
 
 
 ### LICENSE

@@ -7,6 +7,13 @@ type C struct {
 }
 
 
+
+// A stage where a series of files goes for transformation, manipulation.
+// There is no correlation between a stages input and output, a stage may
+// decided to pass the same files after transofrmation or generate new files
+// based on the input.
+
+
 type Stage func(<-chan File, chan<- File)
 
 func (j Stage) pipe(p <-chan File) Pipe {
@@ -24,7 +31,7 @@ func (j Stage) pipe(p <-chan File) Pipe {
 //Pipe is a channel of Files.
 type Pipe <-chan File
 
-// Pipes the current channel to the give list of jobs and returns the 
+// Pipes the current Channel to the give list of Stages and returns the 
 // last jobs otput pipe.
 func (p Pipe) Pipe(j ...Stage) Pipe {
 	switch len(j) {
@@ -39,8 +46,6 @@ func (p Pipe) Pipe(j ...Stage) Pipe {
 
 // Waits for the end of channel and closes all the files.
 func (p Pipe) Wait() error {
-	//Waits for the "build" to Pipe to finish and closes all
-	// files, returns the first error.
 	var err error
 	for f := range p {
 		e := f.Close()
@@ -55,4 +60,3 @@ func (p Pipe) Wait() error {
 func (p Pipe) Then(j ...Stage) error {
   return p.Pipe(j...).Wait()
 }
-

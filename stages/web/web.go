@@ -1,3 +1,5 @@
+//Package web provides HTTP access stages for Slurp.
+
 package web
 
 import (
@@ -20,6 +22,8 @@ func name(url string, response *http.Response) string {
 	return name
 }
 
+// Gets  the list of urls and passes the results to output channel.
+// It reports the progress to the Context using a ReadProgress proxy.
 func Get(c *slurp.C, urls ...string) slurp.Pipe {
 
 	pipe := make(chan slurp.File)

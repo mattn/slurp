@@ -1,3 +1,5 @@
+// Package archive provides archiving Stages for Slurp.
+
 package archive
 
 import (
@@ -10,6 +12,8 @@ import (
 	"github.com/omeid/slurp"
 )
 
+// Unzip the zip files from input channel and pass the result
+// to the output channel. 
 func Unzip(c *slurp.C) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 

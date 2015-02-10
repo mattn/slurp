@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+
+// File is the object that is passed between Slurp Pipes and Stages.
 type File struct {
 	io.Reader
 	Cwd  string //Where are we?
@@ -37,6 +39,7 @@ func FileInfoFrom(fi os.FileInfo) *FileInfo {
 
 }
 
+// Fileinfo implements os.FileInfo.
 type FileInfo struct {
 	name    string
 	size    int64
