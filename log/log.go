@@ -75,7 +75,13 @@ func (l *logger) Fatalln(v ...interface{}) {
 }
 
 func (l *logger) ReadProgress(r io.Reader, name string, size int64) io.ReadCloser {
-	return &ProgressBar{r, name, size, 0, l, humanize.Bytes(uint64(size)), 0, NewRateLimit(Rate)}
+
+	var sizeHuman string
+
+	if size > 0 {
+		sizeHuman = humanize.Bytes(uint64(size))
+	}
+	return &ProgressBar{r, name, size, 0, l, sizeHuman, 0, NewRateLimit(Rate)}
 }
 
 func (l *logger) Counter(name string, size int) *Counter {
@@ -98,11 +104,12 @@ type ProgressBar struct {
 }
 
 func (p *ProgressBar) print() {
-	p.l.Printf("%s [%3d%%] %s of %s\n",
-		p.name,
-		p.done*100/p.size,
-		humanize.Bytes(uint64(p.done)),
-		p.sizeHuman)
+
+	if p.sizeHuman == "" {
+		p.l.Printf("%s [UKN%%] %s of UKN\n", p.name, humanize.Bytes(uint64(p.done)))
+		return
+	}
+	p.l.Printf("%s [%3d%%] %s of %s\n", p.name, p.done*100/p.size, humanize.Bytes(uint64(p.done)), p.sizeHuman)
 }
 func (p *ProgressBar) Read(b []byte) (int, error) {
 	n, err := p.Reader.Read(b)
@@ -118,12 +125,11 @@ func (p *ProgressBar) Read(b []byte) (int, error) {
 
 func (p *ProgressBar) Close() error {
 	p.print()
-	var err error
 	c, ok := p.Reader.(io.Closer)
 	if ok {
-		err = c.Close()
+		return c.Close()
 	}
-	return err
+	return nil
 }
 
 type Counter struct {

@@ -23,16 +23,15 @@ func Unzip(c *slurp.C) slurp.Job {
 				raw, err := ioutil.ReadAll(file)
 				file.Close()
 
-				r, err := zip.NewReader(bytes.NewReader(raw), file.Stat.Size())
+				r, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
 				if err != nil {
 					c.Println(err)
 					return
 				}
 
-				// Iterate through the files in the archive,
-				// printing some of their contents.
 				counter := c.Counter("unzipping", len(r.File))
-				//bars := c.New("    ")
+
+				// Iterate through the files in the archive,
 				for i, f := range r.File {
 					counter.Set(i+1, f.Name)
 

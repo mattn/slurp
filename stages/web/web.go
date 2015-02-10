@@ -3,7 +3,6 @@ package web
 import (
 	"mime"
 	"net/http"
-	"net/url"
 	"path"
 
 	"github.com/omeid/slurp"
@@ -57,27 +56,15 @@ func Get(c *slurp.C, urls ...string) slurp.Pipe {
 	return pipe
 }
 
+/*
 func Put(url url.URL) slurp.Job {
 	return func(files <-chan slurp.File, out chan<- slurp.File) {
 		for file := range files {
 			_ = file
 			/*
-				path := filepath.Join(dst, file.Dir)
-				err := os.MkdirAll(path, 0700)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-
-				realfile, err := os.Create(filepath.Join(path, file.Stat.Name()))
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				io.Copy(realfile, file.Content)
-				realfile.Close()
-				out <- file
-			*/
+			// */ /*
 		}
 	}
 }
+
+*/
