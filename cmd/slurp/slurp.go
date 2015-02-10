@@ -20,6 +20,7 @@ var (
 	runner string = "slurp."
 	cwd    string
 
+	build = flag.Bool("build", false, "build the current build as slurp-bin")
 	install   = flag.Bool("install", false, "install current slurp.Go as slurp.PKG.")
 	bare      = flag.Bool("bare", false, "Run/Install the slurp.go file without any other files.")
 	slurpfile = flag.String("slurpfile", "slurp.go", "The file that includes the Slurp(*s.Build) function, use by -bare")
@@ -33,13 +34,13 @@ func main() {
 		log.Fatal("$GOPATH must be set.")
 	}
 
-	err := run(*install)
+	err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func run(install bool) error {
+func run() error {
 	path, err := generate()
 	if err != nil {
 		return err
@@ -57,7 +58,19 @@ func run(install bool) error {
 	get.Stdout = os.Stdout
 	get.Stderr = os.Stderr
 
-	if install {
+	if *build {
+		err := get.Run()
+		if err != nil {
+			return err
+		}
+
+		runnerpkg, err := filepath.Rel(filepath.Join(gopath, "src"), filepath.Join(filepath.Join(path, runner)))
+		if err != nil {
+			return err
+		}
+		args = []string{"build", "-tags=slurp", "-o=slurp-bin", runnerpkg}
+
+	} else if *install {
 		err := get.Run()
 		if err != nil {
 			return err
