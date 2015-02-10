@@ -5,10 +5,10 @@ package resources
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/omeid/slurp"
-	"github.com/omeid/slurp/stages/fs"
 )
 
 var FilenameFormat = "%s_resource.go"
@@ -19,30 +19,28 @@ func Name(Var string) string {
 
 func New() *Package {
 	return &Package{
-		Pkg:   "resources",
-		Var:   "FS",
+		Config: Config{
+			Pkg:     "resources",
+			Var:     "FS",
+			Declare: true,
+		},
 		Files: make(map[string]slurp.File),
 	}
 }
 
+type Config struct {
+	Pkg     string
+	Var     string
+	Declare bool
+}
+
 type Package struct {
-	Pkg   string
-	Var   string
+	Config
 	Files map[string]slurp.File
 }
 
-func (p *Package) Add(file slurp.File) {
-	p.Files[file.Path] = file
-}
-
-func (p *Package) AddFile(path string) error {
-	f, err := fs.Read(path)
-	if err != nil {
-		return err
-	}
-
-	p.Add(*f)
-	return nil
+func (p *Package) Add(path string, file slurp.File) {
+	p.Files[path] = file
 }
 
 func (p *Package) Build() (*bytes.Buffer, error) {
@@ -68,14 +66,15 @@ func (p *Package) File() (*slurp.File, error) {
 
 }
 
-func Pack(c *slurp.C, Pkg string, Var string) slurp.Stage {
+func Pack(c *slurp.C, config Config) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		res := New()
-		res.Pkg = Pkg
-		res.Var = Var
+		res.Config = config
 		for file := range in {
-			res.Add(file)
+			path, _ := filepath.Rel(file.Dir, file.Path)
+		res.Add(path, file)
+			c.Printf("Adding %s.\n", path)
 			defer file.Close() //Close files AFTER we have build our package.
 		}
 
