@@ -6,7 +6,7 @@ import (
 	"github.com/omeid/slurp/tools/glob"
 )
 
-func FilterFunc(c *C, filter func(File) bool) Job {
+func FilterFunc(c *C, filter func(File) bool) Stage {
 	return func(files <-chan File, out chan<- File) {
 		for f := range files {
 			if filter(f) {
@@ -18,7 +18,7 @@ func FilterFunc(c *C, filter func(File) bool) Job {
 	}
 }
 
-func DoFunc(c *C, do func(*C, File) File) Job {
+func DoFunc(c *C, do func(*C, File) File) Stage {
 	return func(files <-chan File, out chan<- File) {
 		for f := range files {
 			out <- do(c, f)
@@ -27,14 +27,14 @@ func DoFunc(c *C, do func(*C, File) File) Job {
 }
 
 //For The Glory of Debugging.
-func List(c *C) Job {
+func List(c *C) Stage {
 	return DoFunc(c, func(c *C, f File) File {
 		c.Printf("File: %+v Name: %s", f, f.Stat.Name())
 		return f
 	})
 }
 
-func Filter(c *C, pattern string) Job {
+func Filter(c *C, pattern string) Stage {
 	return FilterFunc(c, func(f File) bool {
 		m, err := glob.Match(pattern, f.Stat.Name())
 		if err != nil {
@@ -44,7 +44,7 @@ func Filter(c *C, pattern string) Job {
 	})
 }
 
-func Concat(c *C, output string) Job {
+func Concat(c *C, output string) Stage {
 	return func(files <-chan File, out chan<- File) {
 
 		var (

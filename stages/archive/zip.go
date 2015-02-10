@@ -10,7 +10,7 @@ import (
 	"github.com/omeid/slurp"
 )
 
-func Unzip(c *slurp.C) slurp.Job {
+func Unzip(c *slurp.C) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		var wg sync.WaitGroup

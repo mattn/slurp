@@ -57,7 +57,7 @@ func Get(c *slurp.C, urls ...string) slurp.Pipe {
 }
 
 /*
-func Put(url url.URL) slurp.Job {
+func Put(url url.URL) slurp.Stage {
 	return func(files <-chan slurp.File, out chan<- slurp.File) {
 		for file := range files {
 			_ = file

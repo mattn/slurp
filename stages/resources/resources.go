@@ -66,7 +66,7 @@ func (p *Package) File() (*slurp.File, error) {
 
 }
 
-func Pack(c *slurp.C, Pkg string, Var string) slurp.Job {
+func Pack(c *slurp.C, Pkg string, Var string) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		res := New()

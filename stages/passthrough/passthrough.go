@@ -17,7 +17,7 @@ import (
 // bin is the binary name, it will be passed to os/exec.Command, so the same
 // path rules applies.
 // the args are the argumetns passed to the program.
-func Run(c *slurp.C, bin string, args ...string) slurp.Job {
+func Run(c *slurp.C, bin string, args ...string) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		//Because programs block, zip is not an streaming archive, we don't want to block.

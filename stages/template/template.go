@@ -36,7 +36,7 @@ func (t templateReadCloser) Close() error {
 	return nil
 }
 
-func HTML(c *slurp.C, data interface{}) slurp.Job {
+func HTML(c *slurp.C, data interface{}) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
 		templates := html.New("")

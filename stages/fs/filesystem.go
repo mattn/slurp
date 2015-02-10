@@ -64,7 +64,7 @@ func Src(c *slurp.C, globs ...string) slurp.Pipe {
 	return pipe
 }
 
-func Dest(c *slurp.C, dst string) slurp.Job {
+func Dest(c *slurp.C, dst string) slurp.Stage {
 	return func(files <-chan slurp.File, out chan<- slurp.File) {
 
 		var wg sync.WaitGroup

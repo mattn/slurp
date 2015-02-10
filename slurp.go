@@ -6,10 +6,11 @@ type C struct {
 	log.Log
 }
 
-type Job func(<-chan File, chan<- File)
 
-func (j Job) pipe(p <-chan File) Pipe {
-	//func (p Pipe) Pipe(j Job) Pipe {
+type Stage func(<-chan File, chan<- File)
+
+func (j Stage) pipe(p <-chan File) Pipe {
+	//func (p Pipe) Pipe(j Stage) Pipe {
 	out := make(chan File)
 	go func() {
 		defer close(out)
@@ -19,9 +20,13 @@ func (j Job) pipe(p <-chan File) Pipe {
 	return out
 }
 
+
+//Pipe is a channel of Files.
 type Pipe <-chan File
 
-func (p Pipe) Pipe(j ...Job) Pipe {
+// Pipes the current channel to the give list of jobs and returns the 
+// last jobs otput pipe.
+func (p Pipe) Pipe(j ...Stage) Pipe {
 	switch len(j) {
 	case 0:
 		return p
@@ -32,6 +37,7 @@ func (p Pipe) Pipe(j ...Job) Pipe {
 	}
 }
 
+// Waits for the end of channel and closes all the files.
 func (p Pipe) Wait() error {
 	//Waits for the "build" to Pipe to finish and closes all
 	// files, returns the first error.
@@ -44,3 +50,9 @@ func (p Pipe) Wait() error {
 	}
 	return err
 }
+
+//This is a combination of p.Pipe(....).Wait()
+func (p Pipe) Then(j ...Stage) error {
+  return p.Pipe(j...).Wait()
+}
+
