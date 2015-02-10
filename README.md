@@ -75,8 +75,7 @@ b.Task("deps", nil, func(c *slurp.C) error {
 This is a cli tool that runs and help you compile your builders. It is go get’able and you can install with:
 
 ```bash
- $ go get github.com/omeid/slurp               # get it.
- $ go install github.com/omeid/slurp/cmd/slurp # install it.
+ $ go get -u -v github.com/omeid/slurp/cmd/slurp  # get it.
 ```
 
 Slurp uses the Slurp build tag. That is, it passes `-tags=slurp` to go tooling when building or running your project,
