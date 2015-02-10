@@ -1,5 +1,7 @@
-> Heads up! This is pre-release software.
+> Heads up! This is pre-release software.  
+
 [![GoDoc](https://godoc.org/github.com/omeid/slurp?status.svg)](https://godoc.org/github.com/omeid/slurp)
+
 # Slurp 
 Building with Go, easier than a slurp.
 
@@ -11,8 +13,8 @@ Slurp is a [Gulp.js](http://gulpjs.com/) inspired build toolkit designed with id
 - ...
 
 
-### Why?
-> The tale of Gulp, Go, Go Templates, CSS, CoffeeScript, and minifiaction and building assets should go here.
+> ### Why?
+  The tale of Gulp, Go, Go Templates, CSS, CoffeeScript, and minifiaction and building assets should go here.
 
 
 
@@ -131,7 +133,4 @@ Please see [Contributing](CONTRIBUTING.md)
 
 
 ### LICENSE
-The MIT License (MIT)
-Copyright (c) 2014 omeid <public@omeid.me>
-
-See [LICENSE](LICENSE).
+  [MIT](LICENSE).
