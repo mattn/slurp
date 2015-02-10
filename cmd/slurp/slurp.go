@@ -7,23 +7,23 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"text/template"
 )
 
 var (
-	gopath        = os.Getenv("GOPATH")
-	runner string = "slurp."
-	cwd    string
+	gopath    = os.Getenv("GOPATH")
+	gopathsrc = filepath.Join(gopath, "src")
+	cwd       string
 
-	build = flag.Bool("build", false, "build the current build as slurp-bin")
+	build     = flag.Bool("build", false, "build the current build as slurp-bin")
 	install   = flag.Bool("install", false, "install current slurp.Go as slurp.PKG.")
 	bare      = flag.Bool("bare", false, "Run/Install the slurp.go file without any other files.")
 	slurpfile = flag.String("slurpfile", "slurp.go", "The file that includes the Slurp(*s.Build) function, use by -bare")
+
+	keep = flag.Bool("keep", false, "keep the generated source under $GOPATH/src/slurp-run-*")
 )
 
 func main() {
@@ -42,14 +42,15 @@ func main() {
 
 func run() error {
 	path, err := generate()
+	runnerpath := filepath.Join(path, "runner")
 	if err != nil {
 		return err
 	}
 
 	//Don't forget to clean up.
-	defer os.RemoveAll(path)
-
-	var args []string
+	if !*keep {
+		//	defer os.RemoveAll(path)
+	}
 
 	//if len(params) > 0 && params[0] == "init"
 	get := exec.Command("go", "get", "-tags=slurp", "-v")
@@ -58,29 +59,20 @@ func run() error {
 	get.Stdout = os.Stdout
 	get.Stderr = os.Stderr
 
-	if *build {
+	if *build || *install {
 		err := get.Run()
 		if err != nil {
 			return err
 		}
+	}
 
-		runnerpkg, err := filepath.Rel(filepath.Join(gopath, "src"), filepath.Join(filepath.Join(path, runner)))
-		if err != nil {
-			return err
-		}
-		args = []string{"build", "-tags=slurp", "-o=slurp-bin", runnerpkg}
+	var args []string
+
+	if *build {
+		args = []string{"build", "-tags=slurp", "-o=slurp-bin", runnerpath}
 
 	} else if *install {
-		err := get.Run()
-		if err != nil {
-			return err
-		}
-
-		runnerpkg, err := filepath.Rel(filepath.Join(gopath, "src"), filepath.Join(filepath.Join(path, runner)))
-		if err != nil {
-			return err
-		}
-		args = []string{"install", "-tags=slurp", runnerpkg}
+		args = []string{"install", "-tags=slurp", runnerpath}
 
 	} else {
 		params := flag.Args()
@@ -92,7 +84,7 @@ func run() error {
 			}
 		}
 
-		args = []string{"run", "-tags=slurp", filepath.Join(filepath.Join(path, runner, "main.go"))}
+		args = []string{"run", "-tags=slurp", filepath.Join(runnerpath, "main.go")}
 		args = append(args, params...)
 	}
 
@@ -112,26 +104,39 @@ func run() error {
 
 func generate() (string, error) {
 
-	//Let's grab a temp folder.
-	path, err := ioutil.TempDir(filepath.Join(gopath, "src"), "slurp-run-")
+	cwd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
+	//The target package import path.
+	pkgpath, err := filepath.Rel(gopathsrc, cwd)
+	if err != nil {
+		return "", err
+	}
+
+	if base := filepath.Base(pkgpath); base == "." || base == ".." {
+		return "", errors.New("forbidden path. Your CWD must be under $GOPATH/src.")
+	}
+
+	//build our package path.
+	path := filepath.Join(gopathsrc, "slurp", pkgpath)
+
+	//Clean it up.
+	os.RemoveAll(path)
+
+	//log.Println("Creating temporary build path...", path)
+
+	//Create the target package directory.
 	tmp := filepath.Join(path, "tmp")
-	err = os.Mkdir(tmp, 0700)
+	err = os.MkdirAll(tmp, 0700)
 	if err != nil {
 		return path, err
 	}
 
-	cwd, err = os.Getwd()
-	if err != nil {
-		return path, err
-	}
-
-	runner = runner + filepath.Base(cwd)
-	runnerpkg := filepath.Join(path, runner)
-	err = os.Mkdir(runnerpkg, 0700)
+	//Create the runner package directory.
+	runnerpath := filepath.Join(path, "runner")
+	err = os.Mkdir(runnerpath, 0700)
 	if err != nil {
 		return path, err
 	}
@@ -142,6 +147,8 @@ func generate() (string, error) {
 	fset := token.NewFileSet() // positions are relative to fset
 
 	var pkgs map[string]*ast.Package
+
+	//log.Printf("Parsing %s...", pkgpath)
 
 	if *bare {
 		pkgs = make(map[string]*ast.Package)
@@ -165,8 +172,6 @@ func generate() (string, error) {
 	}
 
 	for _, pkg := range pkgs {
-		//This loop always runs once. I don't know of any other way to get the pkg out of pkgs
-		// witout understanding the names.
 		for name, f := range pkg.Files {
 			f.Name.Name = "tmp" //Change package name
 
@@ -182,7 +187,8 @@ func generate() (string, error) {
 		}
 	}
 
-	file, err := os.Create(filepath.Join(runnerpkg, "main.go"))
+	//log.Println("Generating the runner...")
+	file, err := os.Create(filepath.Join(runnerpath, "main.go"))
 	if err != nil {
 		return path, err
 	}
@@ -213,51 +219,5 @@ func writeFileSet(filepath string, fset *token.FileSet, node interface{}) error 
 		return err
 	}
 	defer file.Close()
-
 	return format.Node(file, fset, node)
 }
-
-var runnerSrc = template.Must(template.New("main").Parse(`
-package main
-
-import (
-  "flag"
-  "strings"
-  "os"
-  "os/signal"
-
-  "github.com/omeid/slurp"
-
-  client "{{ . }}/tmp"
-)
-
-func main() {
-
-  flag.Parse()
-
-  interrupts := make(chan os.Signal, 1)
-  signal.Notify(interrupts, os.Interrupt)
-
-  slurp := slurp.NewBuild()
-
-  go func() {
-	sig := <-interrupts
-	// stop watches and clean up.
-	slurp.Printf("captured %v, stopping build and exiting..\n", sig)
-	slurp.Close() 
-	os.Exit(1)
-  }()
-
-
-  client.Slurp(slurp)
-
-  tasks := flag.Args()
-  if len(tasks) == 0 {
-	tasks = []string{"default"}
-  }
-
-  slurp.Printf("Running: %s", strings.Join(tasks, "," ))
-  slurp.Run(slurp.C, tasks...)
-  slurp.Close() 
-}
-`))

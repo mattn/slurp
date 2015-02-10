@@ -68,7 +68,7 @@ func (b *Build) Start(c *C, tasks ...string) Waiter {
 	for _, name := range tasks {
 		task, ok := b.tasks[name]
 		if !ok {
-			b.Printf("No Such Task: %s", task)
+			b.Printf("No Such Task: %s", name)
 			break
 		}
 		wg.Add(1)
