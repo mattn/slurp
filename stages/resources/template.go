@@ -38,9 +38,10 @@ func reader(input io.Reader) (string, error) {
 
 func init() {
 
-	pkg = template.Must(template.New("file").Funcs(template.FuncMap{"reader": reader}).Parse(` &File{
-  Reader: bytes.NewReader([]byte{
-	{{ reader . }} }),
+	pkg = template.Must(template.New("file").Funcs(template.FuncMap{"reader": reader}).Parse(` File{
+	  data: []byte{
+	{{ reader . }} 
+  },
   fi: FileInfo {
 	name:    "{{ .Stat.Name }}", 
     size:    {{ .Stat.Size }},
@@ -74,7 +75,7 @@ func Open(name string) (http.File, error) {
 
 // http.FileSystem implementation.
 type FileSystem struct {
-	files map[string]*File
+	files map[string]File
 }
 
 func (fs *FileSystem) Open(name string) (http.File, error) {
@@ -94,17 +95,18 @@ func (fs *FileSystem) Open(name string) (http.File, error) {
 
 		//We have a directory.
 		return &File{
-			nil,
-			FileInfo{
+		  fi: FileInfo{
 				isDir: true,
 				files: files,
 			}}, nil
 	}
-	return file, nil
+	file.Reader = bytes.NewReader(file.data)
+	return &file, nil
 }
 
 type File struct {
 	*bytes.Reader
+	data []byte
 	fi FileInfo
 }
 
@@ -163,7 +165,7 @@ func (f *FileInfo) Sys() interface{} {
 
 func init() {
   {{ .Var }} = &FileSystem{
-		files: map[string]*File{
+		files: map[string]File{
 		  {{range $path, $file := .Files }} "/{{ $path }}": {{ template "file" $file }}, {{ end }}
 		},
 	  }
