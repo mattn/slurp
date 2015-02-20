@@ -198,7 +198,7 @@ func generate() (string, error) {
 		return path, err
 	}
 
-	err = runnerSrc.Execute(file, tmp)
+	err = runnerSrc.Execute(file, filepath.ToSlash(tmp))
 	if err != nil {
 		return path, err
 	}
