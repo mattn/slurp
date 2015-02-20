@@ -46,7 +46,6 @@ func (p *Package) Add(path string, file slurp.File) {
 	p.Files[path] = file
 }
 
-
 //Build the package
 func (p *Package) Build() (*bytes.Buffer, error) {
 	out := new(bytes.Buffer)
@@ -80,7 +79,7 @@ func Stage(c *slurp.C, config Config) slurp.Stage {
 		res.Config = config
 		for file := range in {
 			path, _ := filepath.Rel(file.Dir, file.Path)
-			res.Add(path, file)
+			res.Add(filepath.ToSlash(path), file)
 			c.Printf("Adding %s.\n", path)
 			defer file.Close() //Close files AFTER we have build our package.
 		}
