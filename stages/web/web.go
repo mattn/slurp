@@ -26,10 +26,10 @@ func name(url string, response *http.Response) string {
 // It reports the progress to the Context using a ReadProgress proxy.
 func Get(c *slurp.C, urls ...string) slurp.Pipe {
 
-	pipe := make(chan slurp.File)
+	out := make(chan slurp.File)
 
 	go func() {
-		defer close(pipe)
+		defer close(out)
 
 		for _, url := range urls {
 
@@ -53,11 +53,14 @@ func Get(c *slurp.C, urls ...string) slurp.Pipe {
 			Stat.SetName(name)
 			Stat.SetSize(resp.ContentLength)
 
-			pipe <- slurp.File{Reader: content, Cwd: "", Dir: "", Path: name, Stat: Stat}
+			f := slurp.File{Reader: content, Cwd: "", Dir: "", Path: name}
+			f.SetStat(Stat)
+
+			out <- f
 		}
 	}()
 
-	return pipe
+	return out
 }
 
 /*

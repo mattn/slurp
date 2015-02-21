@@ -42,7 +42,10 @@ func Unzip(c *slurp.C) slurp.Stage {
 					content, err := f.Open()
 					if err != nil {
 					}
-					out <- slurp.File{Reader: content, Dir: "", Path: f.Name, Stat: f.FileInfo()}
+					fs := slurp.File{Reader: content, Dir: "", Path: f.Name}
+					fs.SetStat(f.FileInfo())
+
+					out <- fs
 
 				}
 			}(file)

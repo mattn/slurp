@@ -13,7 +13,19 @@ type File struct {
 	Cwd  string //Where are we?
 	Dir  string //Dir, usually glob.Base
 	Path string //Full path.
-	Stat os.FileInfo
+
+	stat os.FileInfo
+}
+
+func (f *File) Stat() (os.FileInfo, error) {
+  if f.stat == nil {
+	return nil, os.ErrInvalid
+  }
+  return f.stat, nil
+}
+
+func (f *File) SetStat(stat os.FileInfo) {
+  f.stat = stat
 }
 
 func (f *File) Close() error {

@@ -61,7 +61,13 @@ func HTML(c *slurp.C, data interface{}) slurp.Stage {
 				break
 			}
 
-			template, err := templates.New(f.Stat.Name()).Parse(buf.String())
+			s, err := f.Stat()
+			if err != nil {
+				c.Println("Can't get file name.")
+				break
+			}
+
+			template, err := templates.New(s.Name()).Parse(buf.String())
 			if err != nil {
 				c.Println(err)
 				break

@@ -25,7 +25,10 @@ func Read(path string) (*slurp.File, error) {
 		return nil, err
 	}
 
-	return &slurp.File{Reader: f, Path: path, Stat: Stat}, nil
+	fs := &slurp.File{Reader: f, Path: path}
+	fs.SetStat(Stat)
+
+	return fs, nil
 }
 
 //Src returns a channel of slurp.Files that match the provided pattern.
@@ -83,11 +86,17 @@ func Dest(c *slurp.C, dst string) slurp.Stage {
 			path := filepath.Join(dst, filepath.Dir(realpath))
 			err := os.MkdirAll(path, 0700)
 			if err != nil {
-				//c.Println(err)
+				c.Println(err)
 				return
 			}
 
-			if !file.Stat.IsDir() {
+			s, err := file.Stat()
+			if err != nil {
+				c.Println(err)
+				return
+			}
+
+			if !s.IsDir() {
 
 				realfile, err := os.Create(filepath.Join(dst, realpath))
 

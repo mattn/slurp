@@ -33,7 +33,12 @@ func DoFunc(c *C, do func(*C, File) File) Stage {
 //For The Glory of Debugging.
 func List(c *C) Stage {
 	return DoFunc(c, func(c *C, f File) File {
-		c.Printf("File: %+v Name: %s", f, f.Stat.Name())
+		s, err := f.Stat()
+		if err != nil {
+			c.Print("Can't get file name.")
+		} else {
+			c.Printf("File: %+v Name: %s", f, s.Name())
+		}
 		return f
 	})
 }
@@ -42,7 +47,12 @@ func List(c *C) Stage {
 // they will be closed, otherwise sent to the output channel.
 func Filter(c *C, pattern string) Stage {
 	return FilterFunc(c, func(f File) bool {
-		m, err := glob.Match(pattern, f.Stat.Name())
+		s, err := f.Stat()
+		if err != nil {
+			c.Print("Can't get file name.")
+			return false
+		}
+		m, err := glob.Match(pattern, s.Name())
 		if err != nil {
 			c.Println(err)
 		}
@@ -76,7 +86,7 @@ func Concat(c *C, name string) Stage {
 			Reader: bigfile,
 			Dir:    "",
 			Path:   name,
-			Stat:   &FileInfo{size: size, name: name},
+			stat:   &FileInfo{size: size, name: name},
 		}
 	}
 }
