@@ -17,7 +17,7 @@ type File struct {
 	stat os.FileInfo
 }
 
-func (f *File) Stat() (os.FileInfo, error) {
+func (f File) Stat() (os.FileInfo, error) {
   if f.stat == nil {
 	return nil, os.ErrInvalid
   }
