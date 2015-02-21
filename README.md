@@ -69,6 +69,18 @@ b.Task("deps", nil, func(c *slurp.C) error {
 })
 ```
 
+Currently the following _stages_ are provided with Slurp:
+> No 3rd party dependency, just standard library.  
+
+- [archive](https://godoc.org/github.com/omeid/slurp/stages/archive/)
+- [fs](https://godoc.org/github.com/omeid/slurp/stages/fs/)
+- [passthrough](https://godoc.org/github.com/omeid/slurp/stages/passthrough/)
+- [template](https://godoc.org/github.com/omeid/slurp/stages/template/)
+- [web](https://godoc.org/github.com/omeid/slurp/stages/web/)
+
+
+You can find more at [slurp-contrib](https://github.com/slurp-contrib). gin, gcss, ace, watch, resources (embed), to name a few.
+
 
 ### 2. The Runner (cmd/slurp)
 
