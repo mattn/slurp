@@ -4,40 +4,10 @@ package template
 
 import (
 	"bytes"
-	html "html/template"
-	"io"
-	"sync"
+	"html/template"
 
 	"github.com/omeid/slurp"
 )
-
-type executable interface {
-	Execute(io.Writer, interface{}) error
-}
-
-func NewTemplateReadCloser(c *slurp.C, wg sync.WaitGroup, e executable, data interface{}) templateReadCloser {
-
-	buf := new(bytes.Buffer)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err := e.Execute(buf, data)
-		if err != nil {
-			c.Println(err)
-		}
-	}()
-
-	return templateReadCloser{buf}
-}
-
-type templateReadCloser struct {
-	io.Reader
-}
-
-func (t templateReadCloser) Close() error {
-	return nil
-}
-
 
 // Compiles the input files a html/template using the provided data
 // and passes them down the line.
@@ -46,10 +16,7 @@ func (t templateReadCloser) Close() error {
 func HTML(c *slurp.C, data interface{}) slurp.Stage {
 	return func(in <-chan slurp.File, out chan<- slurp.File) {
 
-		templates := html.New("")
-
-		var wg sync.WaitGroup
-		defer wg.Wait() //Wait before all templates are executed.
+		templates := template.New("")
 
 		for f := range in {
 
@@ -73,7 +40,14 @@ func HTML(c *slurp.C, data interface{}) slurp.Stage {
 				break
 			}
 
-			f.Reader = NewTemplateReadCloser(c, wg, template, data)
+			buff := new(bytes.Buffer)
+			err = template.Execute(buff, data)
+			if err != nil {
+			  c.Println(err)
+			  break
+			}
+
+			f.Reader = buff
 
 			out <- f
 		}
