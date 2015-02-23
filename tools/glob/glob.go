@@ -7,7 +7,7 @@ import (
 
 func Dir(glob string) string {
 	glob = filepath.Dir(glob)
-	for strings.IndexAny(glob, "*?[") < 0 {
+	for strings.IndexAny(glob, "*?[") > 0 {
 		glob = filepath.Dir(glob)
 	}
 	return glob

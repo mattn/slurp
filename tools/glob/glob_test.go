@@ -8,6 +8,7 @@ func TestDir(t *testing.T) {
 		"dir/***":                    "dir",
 		"dir/page/**/google/s?/page": "dir/page",
 		"**": ".",
+		"frontend/*.js": "frontend",
 	} {
 
 		r := Dir(glob)
