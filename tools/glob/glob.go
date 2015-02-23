@@ -6,10 +6,11 @@ import (
 )
 
 func Dir(glob string) string {
-	if strings.IndexAny(glob, "*?[") < 0 {
-		return glob
+	glob = filepath.Dir(glob)
+	for strings.IndexAny(glob, "*?[") < 0 {
+		glob = filepath.Dir(glob)
 	}
-	return Dir(filepath.Dir(glob))
+	return glob
 }
 
 func Base(glob string) string {
